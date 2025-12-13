@@ -17,66 +17,68 @@ import java.util.stream.Collectors;
 @Service
 public class TaskServiceImpl implements TaskService {
 
-    private final TaskRepository taskRepository;
-    private final TaskEntityMapper entityMapper;
+    private final TaskRepository repository;
+    private final TaskEntityMapper mapper;
 
-    public TaskServiceImpl(TaskRepository taskRepository, TaskEntityMapper entityMapper) {
-        this.taskRepository = taskRepository;
-        this.entityMapper = entityMapper;
+    public TaskServiceImpl(TaskRepository repository, TaskEntityMapper mapper) {
+        this.repository = repository;
+        this.mapper = mapper;
     }
 
     @Override
     @Transactional
     public Task create(Task task) {
-        TaskEntity entity = entityMapper.toEntity(task);
-        TaskEntity saved = taskRepository.save(entity);
-        return entityMapper.toDomain(saved);
+        TaskEntity entity = mapper.toEntity(task);
+        TaskEntity saved = repository.save(entity);
+        return mapper.toDomain(saved);
     }
 
     @Override
     @Transactional
     public Task update(UUID id, Task task) {
-        TaskEntity existing = taskRepository.findById(id)
+        TaskEntity existing = repository.findById(id)
                 .orElseThrow(() -> new TaskNotFoundException("Task not found: " + id));
         existing.setTitle(task.getTitle());
         existing.setDescription(task.getDescription());
         existing.setStatus(task.getStatus());
         existing.setDeadline(task.getDeadline());
         existing.setAssigneeId(task.getAssigneeId());
-        TaskEntity updated = taskRepository.save(existing);
-        return entityMapper.toDomain(updated);
+        existing.setColumnId(task.getColumnId());
+        existing.setEpicId(task.getEpicId());
+        TaskEntity updated = repository.save(existing);
+        return mapper.toDomain(updated);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Task findById(UUID id) {
-        return taskRepository.findById(id)
-                .map(entityMapper::toDomain)
+        return repository.findById(id)
+                .map(mapper::toDomain)
                 .orElseThrow(() -> new TaskNotFoundException("Task not found: " + id));
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<Task> findAll() {
-        return taskRepository.findAll().stream()
-                .map(entityMapper::toDomain)
+        return repository.findAll().stream()
+                .map(mapper::toDomain)
                 .collect(Collectors.toList());
     }
 
     @Override
     @Transactional
     public void delete(UUID id) {
-        if (!taskRepository.existsById(id)) {
+        if (!repository.existsById(id)) {
             throw new TaskNotFoundException("Task not found: " + id);
         }
-        taskRepository.deleteById(id);
+        repository.deleteById(id);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<Task> findByStatus(TaskStatus status) {
-        return taskRepository.findAll().stream()
-                .map(entityMapper::toDomain)
+        return repository.findAll().stream()
+                .map(mapper::toDomain)
                 .filter(t -> t.getStatus() == status)
                 .collect(Collectors.toList());
     }

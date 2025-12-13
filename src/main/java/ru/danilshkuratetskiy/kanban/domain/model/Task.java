@@ -16,5 +16,7 @@ public class Task {
     private LocalDateTime updatedAt;
     private LocalDate deadline;
     private UUID assigneeId;
+    private UUID columnId;
+    private UUID epicId;
 }
 

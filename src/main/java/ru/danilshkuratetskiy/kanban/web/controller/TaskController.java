@@ -17,53 +17,53 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/tasks")
 public class TaskController {
 
-    private final TaskService taskService;
-    private final TaskMapper taskMapper;
+    private final TaskService service;
+    private final TaskMapper mapper;
 
-    public TaskController(TaskService taskService, TaskMapper taskMapper) {
-        this.taskService = taskService;
-        this.taskMapper = taskMapper;
+    public TaskController(TaskService service, TaskMapper mapper) {
+        this.service = service;
+        this.mapper = mapper;
     }
 
     @PostMapping
     public ResponseEntity<TaskDto> createTask(@RequestBody TaskDto dto) {
-        Task task = taskMapper.toDomain(dto);
-        Task created = taskService.create(task);
-        return new ResponseEntity<>(taskMapper.toDto(created), HttpStatus.CREATED);
+        Task task = mapper.toDomain(dto);
+        Task created = service.create(task);
+        return new ResponseEntity<>(mapper.toDto(created), HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<TaskDto> updateTask(@PathVariable UUID id, @RequestBody TaskDto dto) {
-        Task task = taskMapper.toDomain(dto);
-        Task updated = taskService.update(id, task);
-        return ResponseEntity.ok(taskMapper.toDto(updated));
+        Task task = mapper.toDomain(dto);
+        Task updated = service.update(id, task);
+        return ResponseEntity.ok(mapper.toDto(updated));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<TaskDto> getTaskById(@PathVariable UUID id) {
-        Task task = taskService.findById(id);
-        return ResponseEntity.ok(taskMapper.toDto(task));
+        Task task = service.findById(id);
+        return ResponseEntity.ok(mapper.toDto(task));
     }
 
     @GetMapping
     public ResponseEntity<List<TaskDto>> getAllTasks() {
-        List<TaskDto> tasks = taskService.findAll().stream()
-                .map(taskMapper::toDto)
+        List<TaskDto> tasks = service.findAll().stream()
+                .map(mapper::toDto)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(tasks);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTask(@PathVariable UUID id) {
-        taskService.delete(id);
+        service.delete(id);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/status/{status}")
     public ResponseEntity<List<TaskDto>> getTasksByStatus(@PathVariable String status) {
         TaskStatus taskStatus = TaskStatus.valueOf(status.toUpperCase());
-        List<TaskDto> tasks = taskService.findByStatus(taskStatus).stream()
-                .map(taskMapper::toDto)
+        List<TaskDto> tasks = service.findByStatus(taskStatus).stream()
+                .map(mapper::toDto)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(tasks);
     }

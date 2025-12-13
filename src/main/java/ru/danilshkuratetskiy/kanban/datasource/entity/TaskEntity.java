@@ -27,16 +27,23 @@ public class TaskEntity {
     @Column(nullable = false)
     private TaskStatus status;
 
-    @Column(nullable = false)
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    @Column(nullable = false)
+    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
     @Column(nullable = false)
     private LocalDate deadline;
 
+    @Column(name = "assignee_id")
     private UUID assigneeId;
+
+    @Column(name = "column_id")
+    private UUID columnId;
+
+    @Column(name = "epic_id", nullable = false)
+    private UUID epicId;
 
     @PrePersist
     public void onCreate() {
