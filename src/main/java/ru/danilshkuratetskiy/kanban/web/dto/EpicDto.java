@@ -1,7 +1,6 @@
 package ru.danilshkuratetskiy.kanban.web.dto;
 
 import lombok.Data;
-import ru.danilshkuratetskiy.kanban.datasource.entity.BoardEntity;
 
 import java.util.UUID;
 

@@ -7,16 +7,11 @@ import java.util.UUID;
 
 @Data
 @Entity
-@Table(
-        name = "columns",
-        uniqueConstraints = {
-                @UniqueConstraint(columnNames = {"board_id", "order_index"})
-        }
-)
+@Table(name = "columns")
 public class ColumnEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue
     private UUID id;
 
     @Column(nullable = false)

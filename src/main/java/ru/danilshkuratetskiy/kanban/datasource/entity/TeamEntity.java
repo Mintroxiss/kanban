@@ -11,15 +11,15 @@ import java.util.UUID;
 public class TeamEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue
     private UUID id;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String name;
 
     @Column(name = "direction_id", nullable = false)
     private UUID directionId;
 
-    @Column(name = "team_lead_id", unique = true)
+    @Column(name = "team_lead_id")
     private UUID teamLeadId;
 }

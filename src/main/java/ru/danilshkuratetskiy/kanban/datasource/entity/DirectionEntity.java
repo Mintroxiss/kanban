@@ -11,12 +11,11 @@ import java.util.UUID;
 public class DirectionEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue
     private UUID id;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String name;
 
-    @Column(length = 2000)
     private String description;
 }
