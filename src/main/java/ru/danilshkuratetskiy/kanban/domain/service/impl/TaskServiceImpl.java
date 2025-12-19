@@ -82,4 +82,18 @@ public class TaskServiceImpl implements TaskService {
                 .filter(t -> t.getStatus() == status)
                 .collect(Collectors.toList());
     }
+
+    @Override
+    @Transactional
+    public Task moveTask(UUID taskId, UUID columnId) {
+        TaskEntity entity = repository.findById(taskId)
+                .orElseThrow(() -> new IllegalArgumentException("Task not found"));
+
+        Task task = mapper.toDomain(entity);
+        task.setColumnId(columnId);
+
+        return mapper.toDomain(
+                repository.save(mapper.toEntity(task))
+        );
+    }
 }

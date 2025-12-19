@@ -48,7 +48,3 @@ dependencies {
 tasks.withType<Test> {
 	useJUnitPlatform()
 }
-
-tasks.jar {
-	from(sourceSets.main.get().resources.srcDirs)
-}

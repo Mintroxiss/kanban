@@ -55,6 +55,7 @@ CREATE TABLE epics (
     title VARCHAR(255) NOT NULL,
     description VARCHAR(2000),
     board_id UUID NOT NULL,
+    team_id UUID
 
     CONSTRAINT uq_board_epic_title UNIQUE (board_id, title)
 );

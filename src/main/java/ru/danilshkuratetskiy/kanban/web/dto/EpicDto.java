@@ -10,4 +10,5 @@ public class EpicDto {
     private String title;
     private String description;
     private UUID boardId;
+    private UUID teamId;
 }

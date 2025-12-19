@@ -28,6 +28,12 @@ ALTER TABLE epics
     FOREIGN KEY (board_id)
     REFERENCES boards(id);
 
+-- Epics → Teams
+ALTER TABLE epics
+    ADD CONSTRAINT fk_epic_team
+    FOREIGN KEY (team_id)
+    REFERENCES teams(id);
+
 -- Tasks → Epics
 ALTER TABLE tasks
     ADD CONSTRAINT fk_task_epic

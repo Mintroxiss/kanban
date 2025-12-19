@@ -40,6 +40,7 @@ public class EpicServiceImpl implements EpicService {
         existing.setTitle(epic.getTitle());
         existing.setDescription(epic.getDescription());
         existing.setBoardId(epic.getBoardId());
+        existing.setTeamId(epic.getTeam_id());
         EpicEntity updated = repository.save(existing);
         return mapper.toDomain(updated);
     }

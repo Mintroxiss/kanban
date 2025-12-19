@@ -21,4 +21,7 @@ public class EpicEntity {
 
     @Column(name = "board_id", nullable = false)
     private UUID boardId;
+
+    @Column(name = "team_id")
+    private UUID teamId;
 }

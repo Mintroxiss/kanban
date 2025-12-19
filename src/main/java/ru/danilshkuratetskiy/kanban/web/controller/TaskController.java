@@ -67,4 +67,12 @@ public class TaskController {
                 .collect(Collectors.toList());
         return ResponseEntity.ok(tasks);
     }
+
+    @PatchMapping("/{id}/move")
+    public Task moveTask(
+            @PathVariable UUID id,
+            @RequestParam UUID columnId
+    ) {
+        return service.moveTask(id, columnId);
+    }
 }
