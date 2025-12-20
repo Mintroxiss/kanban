@@ -1,6 +1,6 @@
 package ru.danilshkuratetskiy.kanban.web.dto.requests;
 
-public record UserWorkloadResponse(
+public record UserWorkloadRequest(
         int totalTasks,
         int inProgressTasks,
         int doneTasks,

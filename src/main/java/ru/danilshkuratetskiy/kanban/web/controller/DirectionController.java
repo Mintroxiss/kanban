@@ -72,6 +72,9 @@ public class DirectionController {
         return ResponseEntity.noContent().build();
     }
 
+    /**
+     * Возвращает все доски направления
+     */
     @GetMapping("/{directionId}/boards")
     public List<BoardDto> getBoards(@PathVariable UUID directionId) {
         return directionService.getBoards(directionId).stream()
@@ -79,6 +82,9 @@ public class DirectionController {
                 .toList();
     }
 
+    /**
+     * Возвращает все команды направления
+     */
     @GetMapping("/{directionId}/teams")
     public List<TeamDto> getTeams(@PathVariable UUID directionId) {
         return directionService.getTeams(directionId).stream()

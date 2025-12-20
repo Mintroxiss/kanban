@@ -168,12 +168,4 @@ public class TaskServiceImpl implements TaskService {
 
         taskRepository.save(task);
     }
-
-    @Override
-    public List<Task> getTasks(UUID userId) {
-        List<TaskEntity> tasks = taskRepository.findByAssigneeId(userId);
-        return tasks.stream()
-                .map(taskMapper::toDomain)
-                .toList();
-    }
 }

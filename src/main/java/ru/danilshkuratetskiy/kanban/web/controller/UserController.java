@@ -5,8 +5,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.danilshkuratetskiy.kanban.domain.model.User;
 import ru.danilshkuratetskiy.kanban.domain.service.UserService;
+import ru.danilshkuratetskiy.kanban.web.dto.entities.TaskDto;
 import ru.danilshkuratetskiy.kanban.web.dto.entities.UserDto;
-import ru.danilshkuratetskiy.kanban.web.dto.requests.UserWorkloadResponse;
+import ru.danilshkuratetskiy.kanban.web.dto.requests.UserWorkloadRequest;
+import ru.danilshkuratetskiy.kanban.web.mapper.TaskMapper;
 import ru.danilshkuratetskiy.kanban.web.mapper.UserMapper;
 
 import java.util.List;
@@ -17,50 +19,70 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/users")
 public class UserController {
 
-    private final UserService service;
-    private final UserMapper mapper;
+    private final UserService userService;
+    private final UserMapper userMapper;
 
-    public UserController(UserService service, UserMapper mapper) {
-        this.service = service;
-        this.mapper = mapper;
+    private final TaskMapper taskMapper;
+
+    public UserController(
+            UserService userService,
+            UserMapper userMapper,
+            TaskMapper taskMapper
+    ) {
+        this.userService = userService;
+        this.userMapper = userMapper;
+        this.taskMapper = taskMapper;
     }
 
     @PostMapping
     public ResponseEntity<UserDto> createUser(@RequestBody UserDto dto) {
-        User user = mapper.toDomain(dto);
-        User created = service.create(user);
-        return new ResponseEntity<>(mapper.toDto(created), HttpStatus.CREATED);
+        User user = userMapper.toDomain(dto);
+        User created = userService.create(user);
+        return new ResponseEntity<>(userMapper.toDto(created), HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<UserDto> updateUser(@PathVariable UUID id, @RequestBody UserDto dto) {
-        User user = mapper.toDomain(dto);
-        User updated = service.update(id, user);
-        return ResponseEntity.ok(mapper.toDto(updated));
+        User user = userMapper.toDomain(dto);
+        User updated = userService.update(id, user);
+        return ResponseEntity.ok(userMapper.toDto(updated));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<UserDto> getUserById(@PathVariable UUID id) {
-        User user = service.findById(id);
-        return ResponseEntity.ok(mapper.toDto(user));
+        User user = userService.findById(id);
+        return ResponseEntity.ok(userMapper.toDto(user));
     }
 
     @GetMapping
     public ResponseEntity<List<UserDto>> getAllUsers() {
-        List<UserDto> users = service.findAll().stream()
-                .map(mapper::toDto)
+        List<UserDto> users = userService.findAll().stream()
+                .map(userMapper::toDto)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(users);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable UUID id) {
-        service.delete(id);
+        userService.delete(id);
         return ResponseEntity.noContent().build();
     }
 
+    /**
+     * Возвращает все задачи, назначенные пользователю
+     */
+    @GetMapping("/{userId}/tasks")
+    public List<TaskDto> getUserTasks(@PathVariable UUID userId) {
+        return userService.getTasks(userId).stream()
+                .map(taskMapper::toDto)
+                .toList();
+    }
+
+    /**
+     * Возвращает нагрузку пользователя
+     */
     @GetMapping("/{userId}/workload")
-    public UserWorkloadResponse getWorkload(@PathVariable UUID userId) {
-        return service.getWorkload(userId);
+    public UserWorkloadRequest getWorkload(@PathVariable UUID userId) {
+        return userService.getWorkload(userId);
     }
 }

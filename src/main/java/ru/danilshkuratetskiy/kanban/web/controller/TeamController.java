@@ -78,6 +78,9 @@ public class TeamController {
         return ResponseEntity.noContent().build();
     }
 
+    /**
+     * Возвращает всех пользователей команды
+     */
     @GetMapping("/{teamId}/users")
     public List<UserDto> getUsers(@PathVariable UUID teamId) {
         return teamService.getTeamUsers(teamId).stream()
@@ -85,6 +88,9 @@ public class TeamController {
                 .toList();
     }
 
+    /**
+     * Возвращает все эпики, назначенные команде
+     */
     @GetMapping("/{teamId}/epics")
     public List<EpicDto> getEpics(@PathVariable UUID teamId) {
         return teamService.getTeamEpics(teamId).stream()
@@ -92,6 +98,9 @@ public class TeamController {
                 .toList();
     }
 
+    /**
+     * Возвращает все задачи команды
+     */
     @GetMapping("/{teamId}/tasks")
     public List<TaskDto> getTasks(@PathVariable UUID teamId) {
         return teamService.getTeamTasks(teamId).stream()

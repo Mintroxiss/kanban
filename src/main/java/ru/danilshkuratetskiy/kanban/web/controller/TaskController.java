@@ -69,6 +69,9 @@ public class TaskController {
         return ResponseEntity.ok(tasks);
     }
 
+    /**
+     * Перемещает задачу между колонками
+     */
     @PatchMapping("/{id}/move")
     public Task moveTask(
             @PathVariable UUID id,
@@ -77,6 +80,9 @@ public class TaskController {
         return service.moveTask(id, columnId);
     }
 
+    /**
+     * Назначает исполнителя на задачу
+     */
     @PatchMapping("/{taskId}/assign")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void assignTask(
@@ -86,6 +92,9 @@ public class TaskController {
         service.assignTask(taskId, assigneeId);
     }
 
+    /**
+     * Изменяет статус задачи
+     */
     @PatchMapping("/{taskId}/status")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void changeStatus(
@@ -97,12 +106,5 @@ public class TaskController {
                 request.status(),
                 request.columnId()
         );
-    }
-
-    @GetMapping("/{userId}/tasks")
-    public List<TaskDto> getUserTasks(@PathVariable UUID userId) {
-        return service.getTasks(userId).stream()
-                .map(mapper::toDto)
-                .toList();
     }
 }

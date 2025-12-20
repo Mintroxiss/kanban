@@ -58,6 +58,9 @@ public class EpicController {
         return ResponseEntity.noContent().build();
     }
 
+    /**
+     * Назначает эпик команде
+     */
     @PatchMapping("/{epicId}/assign-team")
     public ResponseEntity<EpicDto> assignTeam(
             @PathVariable UUID epicId,

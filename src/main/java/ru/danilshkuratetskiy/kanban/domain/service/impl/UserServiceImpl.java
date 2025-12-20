@@ -4,14 +4,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.danilshkuratetskiy.kanban.datasource.entity.TaskEntity;
 import ru.danilshkuratetskiy.kanban.datasource.entity.UserEntity;
+import ru.danilshkuratetskiy.kanban.datasource.mapper.TaskEntityMapper;
 import ru.danilshkuratetskiy.kanban.datasource.mapper.UserEntityMapper;
 import ru.danilshkuratetskiy.kanban.datasource.repository.TaskRepository;
 import ru.danilshkuratetskiy.kanban.datasource.repository.UserRepository;
+import ru.danilshkuratetskiy.kanban.domain.model.Task;
 import ru.danilshkuratetskiy.kanban.domain.model.TaskStatus;
 import ru.danilshkuratetskiy.kanban.domain.model.User;
 import ru.danilshkuratetskiy.kanban.domain.service.UserService;
 import ru.danilshkuratetskiy.kanban.domain.service.exception.UserNotFoundException;
-import ru.danilshkuratetskiy.kanban.web.dto.requests.UserWorkloadResponse;
+import ru.danilshkuratetskiy.kanban.web.dto.requests.UserWorkloadRequest;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -25,11 +27,18 @@ public class UserServiceImpl implements UserService {
     private final UserEntityMapper userMapper;
 
     private final TaskRepository taskRepository;
+    private final TaskEntityMapper taskMapper;
 
-    public UserServiceImpl(UserRepository userRepository, UserEntityMapper userMapper, TaskRepository taskRepository) {
+    public UserServiceImpl(
+            UserRepository userRepository,
+            UserEntityMapper userMapper,
+            TaskRepository taskRepository,
+            TaskEntityMapper taskMapper
+    ) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
         this.taskRepository = taskRepository;
+        this.taskMapper = taskMapper;
     }
 
     @Override
@@ -78,7 +87,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public UserWorkloadResponse getWorkload(UUID userId) {
+    public UserWorkloadRequest getWorkload(UUID userId) {
 
         List<TaskEntity> tasks = taskRepository.findByAssigneeId(userId);
 
@@ -93,6 +102,14 @@ public class UserServiceImpl implements UserService {
                 .filter(t -> t.getDeadline().isBefore(LocalDate.now()))
                 .count();
 
-        return new UserWorkloadResponse(total, inProgress, done, overdue);
+        return new UserWorkloadRequest(total, inProgress, done, overdue);
+    }
+
+    @Override
+    public List<Task> getTasks(UUID userId) {
+        List<TaskEntity> tasks = taskRepository.findByAssigneeId(userId);
+        return tasks.stream()
+                .map(taskMapper::toDomain)
+                .toList();
     }
 }
