@@ -37,3 +37,4 @@ out/
 .vscode/
 
 *.drawio*
+src/main/resources/db/migration/V3__data_for_testing.sql

@@ -6,7 +6,8 @@ import org.springframework.web.bind.annotation.*;
 import ru.danilshkuratetskiy.kanban.domain.model.Task;
 import ru.danilshkuratetskiy.kanban.domain.model.TaskStatus;
 import ru.danilshkuratetskiy.kanban.domain.service.TaskService;
-import ru.danilshkuratetskiy.kanban.web.dto.TaskDto;
+import ru.danilshkuratetskiy.kanban.web.dto.requests.ChangeTaskStatusRequest;
+import ru.danilshkuratetskiy.kanban.web.dto.entities.TaskDto;
 import ru.danilshkuratetskiy.kanban.web.mapper.TaskMapper;
 
 import java.util.List;
@@ -74,5 +75,27 @@ public class TaskController {
             @RequestParam UUID columnId
     ) {
         return service.moveTask(id, columnId);
+    }
+
+    @PatchMapping("/{taskId}/assign")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void assignTask(
+            @PathVariable UUID taskId,
+            @RequestBody UUID assigneeId
+    ) {
+        service.assignTask(taskId, assigneeId);
+    }
+
+    @PatchMapping("/{taskId}/status")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void changeStatus(
+            @PathVariable UUID taskId,
+            @RequestBody ChangeTaskStatusRequest request
+    ) {
+        service.changeStatus(
+                taskId,
+                request.status(),
+                request.columnId()
+        );
     }
 }

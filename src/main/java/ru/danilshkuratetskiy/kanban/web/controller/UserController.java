@@ -5,7 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.danilshkuratetskiy.kanban.domain.model.User;
 import ru.danilshkuratetskiy.kanban.domain.service.UserService;
-import ru.danilshkuratetskiy.kanban.web.dto.UserDto;
+import ru.danilshkuratetskiy.kanban.web.dto.entities.UserDto;
 import ru.danilshkuratetskiy.kanban.web.mapper.UserMapper;
 
 import java.util.List;

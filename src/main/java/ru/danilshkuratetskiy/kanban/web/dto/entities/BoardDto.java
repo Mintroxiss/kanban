@@ -1,13 +1,12 @@
-package ru.danilshkuratetskiy.kanban.web.dto;
+package ru.danilshkuratetskiy.kanban.web.dto.entities;
 
 import lombok.Data;
 
 import java.util.UUID;
 
 @Data
-public class TeamDto {
+public class BoardDto {
     private UUID id;
     private String name;
     private UUID directionId;
-    private UUID teamLeadId;
 }

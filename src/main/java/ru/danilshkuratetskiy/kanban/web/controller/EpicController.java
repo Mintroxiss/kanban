@@ -5,7 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.danilshkuratetskiy.kanban.domain.model.Epic;
 import ru.danilshkuratetskiy.kanban.domain.service.EpicService;
-import ru.danilshkuratetskiy.kanban.web.dto.EpicDto;
+import ru.danilshkuratetskiy.kanban.web.dto.entities.EpicDto;
 import ru.danilshkuratetskiy.kanban.web.mapper.EpicMapper;
 
 import java.util.List;

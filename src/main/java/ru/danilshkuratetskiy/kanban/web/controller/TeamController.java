@@ -5,7 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.danilshkuratetskiy.kanban.domain.model.Team;
 import ru.danilshkuratetskiy.kanban.domain.service.TeamService;
-import ru.danilshkuratetskiy.kanban.web.dto.TeamDto;
+import ru.danilshkuratetskiy.kanban.web.dto.entities.TeamDto;
 import ru.danilshkuratetskiy.kanban.web.mapper.TeamMapper;
 
 import java.util.List;

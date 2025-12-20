@@ -5,7 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.danilshkuratetskiy.kanban.domain.model.Direction;
 import ru.danilshkuratetskiy.kanban.domain.service.DirectionService;
-import ru.danilshkuratetskiy.kanban.web.dto.DirectionDto;
+import ru.danilshkuratetskiy.kanban.web.dto.entities.DirectionDto;
 import ru.danilshkuratetskiy.kanban.web.mapper.DirectionMapper;
 
 import java.util.List;

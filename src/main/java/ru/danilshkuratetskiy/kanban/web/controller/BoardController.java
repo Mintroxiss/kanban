@@ -6,8 +6,8 @@ import org.springframework.web.bind.annotation.*;
 import ru.danilshkuratetskiy.kanban.domain.model.Board;
 import ru.danilshkuratetskiy.kanban.domain.model.Task;
 import ru.danilshkuratetskiy.kanban.domain.service.BoardService;
-import ru.danilshkuratetskiy.kanban.web.dto.BoardDto;
-import ru.danilshkuratetskiy.kanban.web.dto.TaskDto;
+import ru.danilshkuratetskiy.kanban.web.dto.entities.BoardDto;
+import ru.danilshkuratetskiy.kanban.web.dto.entities.TaskDto;
 import ru.danilshkuratetskiy.kanban.web.mapper.BoardMapper;
 import ru.danilshkuratetskiy.kanban.web.mapper.TaskMapper;
 
@@ -79,5 +79,4 @@ public class BoardController {
 
         return ResponseEntity.ok(groupedDtos);
     }
-
 }

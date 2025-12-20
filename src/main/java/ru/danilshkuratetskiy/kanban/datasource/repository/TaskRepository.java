@@ -9,6 +9,4 @@ import java.util.UUID;
 public interface TaskRepository extends JpaRepository<TaskEntity, UUID> {
 
     List<TaskEntity> findAllByColumnIdIn(List<UUID> columnIds);
-
-    List<TaskEntity> findAllByEpicId(UUID epicId);
 }

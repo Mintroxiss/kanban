@@ -1,4 +1,4 @@
-package ru.danilshkuratetskiy.kanban.web.dto;
+package ru.danilshkuratetskiy.kanban.web.dto.entities;
 
 import lombok.Data;
 

@@ -1,14 +1,13 @@
-package ru.danilshkuratetskiy.kanban.web.dto;
+package ru.danilshkuratetskiy.kanban.web.dto.entities;
 
 import lombok.Data;
 
 import java.util.UUID;
 
 @Data
-public class EpicDto {
+public class ColumnDto {
     private UUID id;
     private String title;
-    private String description;
     private UUID boardId;
-    private UUID teamId;
+    private Integer order;
 }

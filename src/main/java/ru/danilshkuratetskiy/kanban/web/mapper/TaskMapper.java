@@ -3,7 +3,7 @@ package ru.danilshkuratetskiy.kanban.web.mapper;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import ru.danilshkuratetskiy.kanban.domain.model.Task;
-import ru.danilshkuratetskiy.kanban.web.dto.TaskDto;
+import ru.danilshkuratetskiy.kanban.web.dto.entities.TaskDto;
 
 @Mapper(componentModel = "spring")
 public interface TaskMapper {

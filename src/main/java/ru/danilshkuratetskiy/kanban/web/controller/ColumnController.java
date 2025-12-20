@@ -5,7 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.danilshkuratetskiy.kanban.domain.model.Column;
 import ru.danilshkuratetskiy.kanban.domain.service.ColumnService;
-import ru.danilshkuratetskiy.kanban.web.dto.ColumnDto;
+import ru.danilshkuratetskiy.kanban.web.dto.entities.ColumnDto;
 import ru.danilshkuratetskiy.kanban.web.mapper.ColumnMapper;
 
 import java.util.List;

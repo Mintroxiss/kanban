@@ -1,11 +1,11 @@
-package ru.danilshkuratetskiy.kanban.domain.model;
+package ru.danilshkuratetskiy.kanban.web.dto.entities;
 
 import lombok.Data;
 
 import java.util.UUID;
 
 @Data
-public class Epic {
+public class EpicDto {
     private UUID id;
     private String title;
     private String description;
