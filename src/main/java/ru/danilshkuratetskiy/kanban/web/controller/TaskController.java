@@ -98,4 +98,11 @@ public class TaskController {
                 request.columnId()
         );
     }
+
+    @GetMapping("/{userId}/tasks")
+    public List<TaskDto> getUserTasks(@PathVariable UUID userId) {
+        return service.getTasks(userId).stream()
+                .map(mapper::toDto)
+                .toList();
+    }
 }

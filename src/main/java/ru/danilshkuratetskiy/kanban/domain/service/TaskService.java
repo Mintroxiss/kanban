@@ -15,4 +15,6 @@ public interface TaskService extends Service<Task> {
     void assignTask(UUID taskId, UUID assigneeId);
 
     void changeStatus(UUID taskId, TaskStatus newStatus, UUID columnId);
+
+    public List<Task> getTasks(UUID userId);
 }

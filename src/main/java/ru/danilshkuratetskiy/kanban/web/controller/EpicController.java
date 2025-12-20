@@ -57,4 +57,13 @@ public class EpicController {
         service.delete(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PatchMapping("/{epicId}/assign-team")
+    public ResponseEntity<EpicDto> assignTeam(
+            @PathVariable UUID epicId,
+            @RequestBody UUID teamId
+    ) {
+        EpicDto dto = mapper.toDto(service.assignTeam(epicId, teamId));
+        return ResponseEntity.ok(dto);
+    }
 }

@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.danilshkuratetskiy.kanban.domain.model.User;
 import ru.danilshkuratetskiy.kanban.domain.service.UserService;
 import ru.danilshkuratetskiy.kanban.web.dto.entities.UserDto;
+import ru.danilshkuratetskiy.kanban.web.dto.requests.UserWorkloadResponse;
 import ru.danilshkuratetskiy.kanban.web.mapper.UserMapper;
 
 import java.util.List;
@@ -56,5 +57,10 @@ public class UserController {
     public ResponseEntity<Void> deleteUser(@PathVariable UUID id) {
         service.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{userId}/workload")
+    public UserWorkloadResponse getWorkload(@PathVariable UUID userId) {
+        return service.getWorkload(userId);
     }
 }
