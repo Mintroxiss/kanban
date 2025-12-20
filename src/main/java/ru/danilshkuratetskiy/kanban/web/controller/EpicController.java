@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.danilshkuratetskiy.kanban.domain.model.Epic;
 import ru.danilshkuratetskiy.kanban.domain.service.EpicService;
 import ru.danilshkuratetskiy.kanban.web.dto.entities.EpicDto;
+import ru.danilshkuratetskiy.kanban.web.dto.requests.AssignTeamRequest;
 import ru.danilshkuratetskiy.kanban.web.mapper.EpicMapper;
 
 import java.util.List;
@@ -64,9 +65,9 @@ public class EpicController {
     @PatchMapping("/{epicId}/assign-team")
     public ResponseEntity<EpicDto> assignTeam(
             @PathVariable UUID epicId,
-            @RequestBody UUID teamId
+            @RequestBody AssignTeamRequest request
     ) {
-        EpicDto dto = mapper.toDto(service.assignTeam(epicId, teamId));
+        EpicDto dto = mapper.toDto(service.assignTeam(epicId, request.teamId()));
         return ResponseEntity.ok(dto);
     }
 }

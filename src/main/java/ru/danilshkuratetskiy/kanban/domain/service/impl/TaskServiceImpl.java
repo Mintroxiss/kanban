@@ -118,7 +118,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     @Transactional
-    public void assignTask(UUID taskId, UUID assigneeId) {
+    public Task assignTask(UUID taskId, UUID assigneeId) {
         TaskEntity task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new TaskNotFoundException("Task not found"));
 
@@ -138,12 +138,13 @@ public class TaskServiceImpl implements TaskService {
 
         task.setAssigneeId(assigneeId);
 
-        taskRepository.save(task);
+        TaskEntity saved = taskRepository.save(task);
+        return taskMapper.toDomain(saved);
     }
 
     @Override
     @Transactional
-    public void changeStatus(
+    public Task changeStatus(
             UUID taskId,
             TaskStatus newStatus,
             UUID columnId
@@ -166,6 +167,7 @@ public class TaskServiceImpl implements TaskService {
         task.setStatus(newStatus);
         task.setColumnId(columnId);
 
-        taskRepository.save(task);
+        TaskEntity saved = taskRepository.save(task);
+        return taskMapper.toDomain(saved);
     }
 }

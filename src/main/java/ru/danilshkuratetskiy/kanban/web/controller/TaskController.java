@@ -6,8 +6,10 @@ import org.springframework.web.bind.annotation.*;
 import ru.danilshkuratetskiy.kanban.domain.model.Task;
 import ru.danilshkuratetskiy.kanban.domain.model.TaskStatus;
 import ru.danilshkuratetskiy.kanban.domain.service.TaskService;
+import ru.danilshkuratetskiy.kanban.web.dto.requests.AssignTaskRequest;
 import ru.danilshkuratetskiy.kanban.web.dto.requests.ChangeTaskStatusRequest;
 import ru.danilshkuratetskiy.kanban.web.dto.entities.TaskDto;
+import ru.danilshkuratetskiy.kanban.web.dto.requests.MoveTaskRequest;
 import ru.danilshkuratetskiy.kanban.web.mapper.TaskMapper;
 
 import java.util.List;
@@ -73,11 +75,12 @@ public class TaskController {
      * Перемещает задачу между колонками
      */
     @PatchMapping("/{id}/move")
-    public Task moveTask(
+    public ResponseEntity<TaskDto> moveTask(
             @PathVariable UUID id,
-            @RequestParam UUID columnId
+            @RequestBody MoveTaskRequest request
     ) {
-        return service.moveTask(id, columnId);
+        TaskDto task = mapper.toDto(service.moveTask(id, request.columnId()));
+        return ResponseEntity.ok(task);
     }
 
     /**
@@ -85,11 +88,12 @@ public class TaskController {
      */
     @PatchMapping("/{taskId}/assign")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void assignTask(
+    public ResponseEntity<TaskDto> assignTask(
             @PathVariable UUID taskId,
-            @RequestBody UUID assigneeId
+            @RequestBody AssignTaskRequest request
     ) {
-        service.assignTask(taskId, assigneeId);
+        Task task = service.assignTask(taskId, request.assigneeId());
+        return ResponseEntity.ok(mapper.toDto(task));
     }
 
     /**
@@ -97,14 +101,16 @@ public class TaskController {
      */
     @PatchMapping("/{taskId}/status")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void changeStatus(
+    public ResponseEntity<TaskDto> changeStatus(
             @PathVariable UUID taskId,
             @RequestBody ChangeTaskStatusRequest request
     ) {
-        service.changeStatus(
+        Task task = service.changeStatus(
                 taskId,
                 request.status(),
                 request.columnId()
         );
+
+        return ResponseEntity.ok(mapper.toDto(task));
     }
 }

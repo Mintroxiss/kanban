@@ -12,7 +12,7 @@ public interface TaskService extends Service<Task> {
 
     Task moveTask(UUID taskId, UUID columnId);
 
-    void assignTask(UUID taskId, UUID assigneeId);
+    Task assignTask(UUID taskId, UUID assigneeId);
 
-    void changeStatus(UUID taskId, TaskStatus newStatus, UUID columnId);
+    Task changeStatus(UUID taskId, TaskStatus newStatus, UUID columnId);
 }
