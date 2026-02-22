@@ -1,5 +1,9 @@
 package ru.danilshkuratetskiy.kanban.web.controller;
 
+import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -31,7 +35,7 @@ public class TaskController {
 
     @PostMapping
     @PreAuthorize("hasAnyRole('PROJECT_MANAGER', 'TEAM_LEAD')")
-    public ResponseEntity<TaskDto> createTask(@RequestBody TaskDto dto) {
+    public ResponseEntity<TaskDto> createTask(@Valid @RequestBody TaskDto dto) {
         Task task = mapper.toDomain(dto);
         Task created = service.create(task);
         return new ResponseEntity<>(mapper.toDto(created), HttpStatus.CREATED);
@@ -39,7 +43,7 @@ public class TaskController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('PROJECT_MANAGER', 'TEAM_LEAD')")
-    public ResponseEntity<TaskDto> updateTask(@PathVariable UUID id, @RequestBody TaskDto dto) {
+    public ResponseEntity<TaskDto> updateTask(@PathVariable UUID id, @Valid @RequestBody TaskDto dto) {
         Task task = mapper.toDomain(dto);
         Task updated = service.update(id, task);
         return ResponseEntity.ok(mapper.toDto(updated));
@@ -52,11 +56,9 @@ public class TaskController {
     }
 
     @GetMapping
-    public ResponseEntity<List<TaskDto>> getAllTasks() {
-        List<TaskDto> tasks = service.findAll().stream()
-                .map(mapper::toDto)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(tasks);
+    public ResponseEntity<Page<TaskDto>> getAllTasks(
+            @PageableDefault(size = 20, sort = "createdAt") Pageable pageable) {
+        return ResponseEntity.ok(service.findAll(pageable).map(mapper::toDto));
     }
 
     @DeleteMapping("/{id}")
@@ -79,7 +81,7 @@ public class TaskController {
     @PreAuthorize("hasAnyRole('PROJECT_MANAGER', 'TEAM_LEAD') or @accessControl.isTaskAssignedToMe(#id)")
     public ResponseEntity<TaskDto> moveTask(
             @PathVariable UUID id,
-            @RequestBody MoveTaskRequest request
+            @Valid @RequestBody MoveTaskRequest request
     ) {
         TaskDto task = mapper.toDto(service.moveTask(id, request.columnId()));
         return ResponseEntity.ok(task);
@@ -89,7 +91,7 @@ public class TaskController {
     @PreAuthorize("hasAnyRole('PROJECT_MANAGER', 'TEAM_LEAD')")
     public ResponseEntity<TaskDto> assignTask(
             @PathVariable UUID taskId,
-            @RequestBody AssignTaskRequest request
+            @Valid @RequestBody AssignTaskRequest request
     ) {
         Task task = service.assignTask(taskId, request.assigneeId());
         return ResponseEntity.ok(mapper.toDto(task));
@@ -99,7 +101,7 @@ public class TaskController {
     @PreAuthorize("hasAnyRole('PROJECT_MANAGER', 'TEAM_LEAD') or @accessControl.isTaskAssignedToMe(#taskId)")
     public ResponseEntity<TaskDto> changeStatus(
             @PathVariable UUID taskId,
-            @RequestBody ChangeTaskStatusRequest request
+            @Valid @RequestBody ChangeTaskStatusRequest request
     ) {
         Task task = service.changeStatus(
                 taskId,

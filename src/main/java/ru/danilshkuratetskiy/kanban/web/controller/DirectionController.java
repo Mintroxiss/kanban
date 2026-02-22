@@ -1,5 +1,9 @@
 package ru.danilshkuratetskiy.kanban.web.controller;
 
+import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -15,7 +19,6 @@ import ru.danilshkuratetskiy.kanban.web.mapper.TeamMapper;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/directions")
@@ -40,7 +43,7 @@ public class DirectionController {
 
     @PostMapping
     @PreAuthorize("hasRole('PROJECT_MANAGER')")
-    public ResponseEntity<DirectionDto> createDirection(@RequestBody DirectionDto dto) {
+    public ResponseEntity<DirectionDto> createDirection(@Valid @RequestBody DirectionDto dto) {
         Direction direction = directionMapper.toDomain(dto);
         Direction created = directionService.create(direction);
         return new ResponseEntity<>(directionMapper.toDto(created), HttpStatus.CREATED);
@@ -48,7 +51,7 @@ public class DirectionController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('PROJECT_MANAGER')")
-    public ResponseEntity<DirectionDto> updateDirection(@PathVariable UUID id, @RequestBody DirectionDto dto) {
+    public ResponseEntity<DirectionDto> updateDirection(@PathVariable UUID id, @Valid @RequestBody DirectionDto dto) {
         Direction direction = directionMapper.toDomain(dto);
         Direction updated = directionService.update(id, direction);
         return ResponseEntity.ok(directionMapper.toDto(updated));
@@ -61,11 +64,9 @@ public class DirectionController {
     }
 
     @GetMapping
-    public ResponseEntity<List<DirectionDto>> getAllDirections() {
-        List<DirectionDto> directions = directionService.findAll().stream()
-                .map(directionMapper::toDto)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(directions);
+    public ResponseEntity<Page<DirectionDto>> getAllDirections(
+            @PageableDefault(size = 20, sort = "name") Pageable pageable) {
+        return ResponseEntity.ok(directionService.findAll(pageable).map(directionMapper::toDto));
     }
 
     @DeleteMapping("/{id}")

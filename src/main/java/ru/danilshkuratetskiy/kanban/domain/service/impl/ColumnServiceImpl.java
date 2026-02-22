@@ -1,5 +1,7 @@
 package ru.danilshkuratetskiy.kanban.domain.service.impl;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.danilshkuratetskiy.kanban.datasource.entity.ColumnEntity;
@@ -58,6 +60,12 @@ public class ColumnServiceImpl implements ColumnService {
         return repository.findAll().stream()
                 .map(mapper::toDomain)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<Column> findAll(Pageable pageable) {
+        return repository.findAll(pageable).map(mapper::toDomain);
     }
 
     @Override

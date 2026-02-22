@@ -1,5 +1,6 @@
 package ru.danilshkuratetskiy.kanban.web.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -18,17 +19,17 @@ public class AuthController {
 
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
-    public JwtAuthentificationDto register(@RequestBody RegisterRequest request) {
+    public JwtAuthentificationDto register(@Valid @RequestBody RegisterRequest request) {
         return authService.register(request);
     }
 
     @PostMapping("/login")
-    public JwtAuthentificationDto login(@RequestBody LoginRequest request) {
+    public JwtAuthentificationDto login(@Valid @RequestBody LoginRequest request) {
         return authService.login(request);
     }
 
     @PostMapping("/refresh")
-    public JwtAuthentificationDto refresh(@RequestBody RefreshTokenDto request) {
+    public JwtAuthentificationDto refresh(@Valid @RequestBody RefreshTokenDto request) {
         return authService.refresh(request.getRefreshToken());
     }
 }

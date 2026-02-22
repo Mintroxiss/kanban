@@ -1,5 +1,7 @@
 package ru.danilshkuratetskiy.kanban.domain.service.impl;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.danilshkuratetskiy.kanban.datasource.entity.EpicEntity;
@@ -18,7 +20,9 @@ import ru.danilshkuratetskiy.kanban.domain.model.Task;
 import ru.danilshkuratetskiy.kanban.domain.model.Team;
 import ru.danilshkuratetskiy.kanban.domain.model.User;
 import ru.danilshkuratetskiy.kanban.domain.service.TeamService;
+import ru.danilshkuratetskiy.kanban.domain.service.exception.BusinessException;
 import ru.danilshkuratetskiy.kanban.domain.service.exception.TeamNotFoundException;
+import ru.danilshkuratetskiy.kanban.domain.service.exception.UserNotFoundException;
 
 import java.util.List;
 import java.util.UUID;
@@ -88,11 +92,17 @@ public class TeamServiceImpl implements TeamService {
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public List<Team> findAll() {
         return teamRepository.findAll().stream()
                 .map(teamMapper::toDomain)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<Team> findAll(Pageable pageable) {
+        return teamRepository.findAll(pageable).map(teamMapper::toDomain);
     }
 
     @Override
@@ -128,5 +138,49 @@ public class TeamServiceImpl implements TeamService {
         return taskRepository.findByTeamId(teamId).stream()
                 .map(taskMapper::toDomain)
                 .toList();
+    }
+
+    @Override
+    @Transactional
+    public User addUserToTeam(UUID teamId, UUID userId) {
+        if (!teamRepository.existsById(teamId)) {
+            throw new TeamNotFoundException("Team not found: " + teamId);
+        }
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found: " + userId));
+        user.setTeamId(teamId);
+        return userMapper.toDomain(userRepository.save(user));
+    }
+
+    @Override
+    @Transactional
+    public void removeUserFromTeam(UUID teamId, UUID userId) {
+        TeamEntity team = teamRepository.findById(teamId)
+                .orElseThrow(() -> new TeamNotFoundException("Team not found: " + teamId));
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found: " + userId));
+        if (!teamId.equals(user.getTeamId())) {
+            throw new BusinessException("User is not a member of this team");
+        }
+        user.setTeamId(null);
+        userRepository.save(user);
+        if (userId.equals(team.getTeamLeadId())) {
+            team.setTeamLeadId(null);
+            teamRepository.save(team);
+        }
+    }
+
+    @Override
+    @Transactional
+    public Team assignTeamLead(UUID teamId, UUID userId) {
+        TeamEntity team = teamRepository.findById(teamId)
+                .orElseThrow(() -> new TeamNotFoundException("Team not found: " + teamId));
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found: " + userId));
+        if (!teamId.equals(user.getTeamId())) {
+            throw new BusinessException("User is not a member of this team");
+        }
+        team.setTeamLeadId(userId);
+        return teamMapper.toDomain(teamRepository.save(team));
     }
 }

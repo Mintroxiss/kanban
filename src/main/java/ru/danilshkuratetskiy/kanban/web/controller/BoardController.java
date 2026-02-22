@@ -1,5 +1,9 @@
 package ru.danilshkuratetskiy.kanban.web.controller;
 
+import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -15,7 +19,6 @@ import ru.danilshkuratetskiy.kanban.web.mapper.TaskMapper;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/boards")
@@ -33,7 +36,7 @@ public class BoardController {
 
     @PostMapping
     @PreAuthorize("hasRole('PROJECT_MANAGER')")
-    public ResponseEntity<BoardDto> createBoard(@RequestBody BoardDto dto) {
+    public ResponseEntity<BoardDto> createBoard(@Valid @RequestBody BoardDto dto) {
         Board board = boardMapper.toDomain(dto);
         Board created = boardService.create(board);
         return new ResponseEntity<>(boardMapper.toDto(created), HttpStatus.CREATED);
@@ -41,7 +44,7 @@ public class BoardController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('PROJECT_MANAGER')")
-    public ResponseEntity<BoardDto> updateBoard(@PathVariable UUID id, @RequestBody BoardDto dto) {
+    public ResponseEntity<BoardDto> updateBoard(@PathVariable UUID id, @Valid @RequestBody BoardDto dto) {
         Board board = boardMapper.toDomain(dto);
         Board updated = boardService.update(id, board);
         return ResponseEntity.ok(boardMapper.toDto(updated));
@@ -54,11 +57,9 @@ public class BoardController {
     }
 
     @GetMapping
-    public ResponseEntity<List<BoardDto>> getAllBoards() {
-        List<BoardDto> boards = boardService.findAll().stream()
-                .map(boardMapper::toDto)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(boards);
+    public ResponseEntity<Page<BoardDto>> getAllBoards(
+            @PageableDefault(size = 20, sort = "name") Pageable pageable) {
+        return ResponseEntity.ok(boardService.findAll(pageable).map(boardMapper::toDto));
     }
 
     @DeleteMapping("/{id}")

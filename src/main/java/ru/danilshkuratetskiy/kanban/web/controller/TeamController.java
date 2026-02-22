@@ -1,5 +1,9 @@
 package ru.danilshkuratetskiy.kanban.web.controller;
 
+import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -10,6 +14,7 @@ import ru.danilshkuratetskiy.kanban.web.dto.entities.EpicDto;
 import ru.danilshkuratetskiy.kanban.web.dto.entities.TaskDto;
 import ru.danilshkuratetskiy.kanban.web.dto.entities.TeamDto;
 import ru.danilshkuratetskiy.kanban.web.dto.entities.UserDto;
+import ru.danilshkuratetskiy.kanban.web.dto.requests.AssignTeamLeadRequest;
 import ru.danilshkuratetskiy.kanban.web.mapper.EpicMapper;
 import ru.danilshkuratetskiy.kanban.web.mapper.TaskMapper;
 import ru.danilshkuratetskiy.kanban.web.mapper.TeamMapper;
@@ -17,7 +22,6 @@ import ru.danilshkuratetskiy.kanban.web.mapper.UserMapper;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/teams")
@@ -45,7 +49,7 @@ public class TeamController {
 
     @PostMapping
     @PreAuthorize("hasRole('PROJECT_MANAGER')")
-    public ResponseEntity<TeamDto> createTeam(@RequestBody TeamDto dto) {
+    public ResponseEntity<TeamDto> createTeam(@Valid @RequestBody TeamDto dto) {
         Team team = teamMapper.toDomain(dto);
         Team created = teamService.create(team);
         return new ResponseEntity<>(teamMapper.toDto(created), HttpStatus.CREATED);
@@ -53,7 +57,7 @@ public class TeamController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('PROJECT_MANAGER')")
-    public ResponseEntity<TeamDto> updateTeam(@PathVariable UUID id, @RequestBody TeamDto dto) {
+    public ResponseEntity<TeamDto> updateTeam(@PathVariable UUID id, @Valid @RequestBody TeamDto dto) {
         Team team = teamMapper.toDomain(dto);
         Team updated = teamService.update(id, team);
         return ResponseEntity.ok(teamMapper.toDto(updated));
@@ -68,11 +72,9 @@ public class TeamController {
 
     @GetMapping
     @PreAuthorize("hasRole('PROJECT_MANAGER')")
-    public ResponseEntity<List<TeamDto>> getAllTeams() {
-        List<TeamDto> teams = teamService.findAll().stream()
-                .map(teamMapper::toDto)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(teams);
+    public ResponseEntity<Page<TeamDto>> getAllTeams(
+            @PageableDefault(size = 20, sort = "name") Pageable pageable) {
+        return ResponseEntity.ok(teamService.findAll(pageable).map(teamMapper::toDto));
     }
 
     @DeleteMapping("/{id}")
@@ -104,5 +106,33 @@ public class TeamController {
         return teamService.getTeamTasks(teamId).stream()
                 .map(taskMapper::toDto)
                 .toList();
+    }
+
+    @PutMapping("/{teamId}/users/{userId}")
+    @PreAuthorize("hasRole('PROJECT_MANAGER')")
+    public ResponseEntity<UserDto> addUserToTeam(
+            @PathVariable UUID teamId,
+            @PathVariable UUID userId
+    ) {
+        return ResponseEntity.ok(userMapper.toDto(teamService.addUserToTeam(teamId, userId)));
+    }
+
+    @DeleteMapping("/{teamId}/users/{userId}")
+    @PreAuthorize("hasRole('PROJECT_MANAGER')")
+    public ResponseEntity<Void> removeUserFromTeam(
+            @PathVariable UUID teamId,
+            @PathVariable UUID userId
+    ) {
+        teamService.removeUserFromTeam(teamId, userId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{teamId}/lead")
+    @PreAuthorize("hasRole('PROJECT_MANAGER')")
+    public ResponseEntity<TeamDto> assignTeamLead(
+            @PathVariable UUID teamId,
+            @Valid @RequestBody AssignTeamLeadRequest request
+    ) {
+        return ResponseEntity.ok(teamMapper.toDto(teamService.assignTeamLead(teamId, request.userId())));
     }
 }

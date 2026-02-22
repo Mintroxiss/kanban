@@ -1,5 +1,7 @@
 package ru.danilshkuratetskiy.kanban.domain.service.impl;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.danilshkuratetskiy.kanban.datasource.entity.BoardEntity;
@@ -77,6 +79,12 @@ public class BoardServiceImpl implements BoardService {
         return boardRepository.findAll().stream()
                 .map(boardMapper::toDomain)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<Board> findAll(Pageable pageable) {
+        return boardRepository.findAll(pageable).map(boardMapper::toDomain);
     }
 
     @Override

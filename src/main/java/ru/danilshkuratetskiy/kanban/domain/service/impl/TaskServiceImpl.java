@@ -1,5 +1,7 @@
 package ru.danilshkuratetskiy.kanban.domain.service.impl;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.danilshkuratetskiy.kanban.datasource.entity.ColumnEntity;
@@ -82,6 +84,12 @@ public class TaskServiceImpl implements TaskService {
         return taskRepository.findAll().stream()
                 .map(taskMapper::toDomain)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<Task> findAll(Pageable pageable) {
+        return taskRepository.findAll(pageable).map(taskMapper::toDomain);
     }
 
     @Override

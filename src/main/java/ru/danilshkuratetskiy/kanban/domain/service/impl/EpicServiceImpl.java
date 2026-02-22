@@ -1,5 +1,7 @@
 package ru.danilshkuratetskiy.kanban.domain.service.impl;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.danilshkuratetskiy.kanban.datasource.entity.BoardEntity;
@@ -75,6 +77,12 @@ public class EpicServiceImpl implements EpicService {
         return epicRepository.findAll().stream()
                 .map(epicMapper::toDomain)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<Epic> findAll(Pageable pageable) {
+        return epicRepository.findAll(pageable).map(epicMapper::toDomain);
     }
 
     @Override

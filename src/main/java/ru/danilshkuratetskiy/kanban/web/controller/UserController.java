@@ -1,5 +1,9 @@
 package ru.danilshkuratetskiy.kanban.web.controller;
 
+import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -14,7 +18,6 @@ import ru.danilshkuratetskiy.kanban.web.mapper.UserMapper;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/users")
@@ -36,7 +39,7 @@ public class UserController {
 
     @PostMapping
     @PreAuthorize("hasRole('PROJECT_MANAGER')")
-    public ResponseEntity<UserDto> createUser(@RequestBody UserDto dto) {
+    public ResponseEntity<UserDto> createUser(@Valid @RequestBody UserDto dto) {
         User user = userMapper.toDomain(dto);
         User created = userService.create(user);
         return new ResponseEntity<>(userMapper.toDto(created), HttpStatus.CREATED);
@@ -44,7 +47,7 @@ public class UserController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('PROJECT_MANAGER')")
-    public ResponseEntity<UserDto> updateUser(@PathVariable UUID id, @RequestBody UserDto dto) {
+    public ResponseEntity<UserDto> updateUser(@PathVariable UUID id, @Valid @RequestBody UserDto dto) {
         User user = userMapper.toDomain(dto);
         User updated = userService.update(id, user);
         return ResponseEntity.ok(userMapper.toDto(updated));
@@ -58,11 +61,9 @@ public class UserController {
 
     @GetMapping
     @PreAuthorize("hasRole('PROJECT_MANAGER')")
-    public ResponseEntity<List<UserDto>> getAllUsers() {
-        List<UserDto> users = userService.findAll().stream()
-                .map(userMapper::toDto)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(users);
+    public ResponseEntity<Page<UserDto>> getAllUsers(
+            @PageableDefault(size = 20, sort = "fullName") Pageable pageable) {
+        return ResponseEntity.ok(userService.findAll(pageable).map(userMapper::toDto));
     }
 
     @DeleteMapping("/{id}")

@@ -1,5 +1,7 @@
 package ru.danilshkuratetskiy.kanban.web.dto.entities;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 import java.util.UUID;
@@ -7,7 +9,9 @@ import java.util.UUID;
 @Data
 public class TeamDto {
     private UUID id;
+    @NotBlank
     private String name;
+    @NotNull
     private UUID directionId;
     private UUID teamLeadId;
 }

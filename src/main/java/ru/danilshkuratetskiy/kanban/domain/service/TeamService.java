@@ -15,4 +15,10 @@ public interface TeamService extends Service<Team> {
     List<Epic> getTeamEpics(UUID teamId);
 
     List<Task> getTeamTasks(UUID teamId);
+
+    User addUserToTeam(UUID teamId, UUID userId);
+
+    void removeUserFromTeam(UUID teamId, UUID userId);
+
+    Team assignTeamLead(UUID teamId, UUID userId);
 }
