@@ -9,5 +9,5 @@ import java.util.UUID;
 
 public interface BoardService extends Service<Board> {
 
-    Map<UUID, List<Task>> getBoardTasksGroupedByColumns(UUID boardId);
+    Map<UUID, List<Task>> getBoardTasksGroupedByColumns(UUID boardId, UUID epicId);
 }

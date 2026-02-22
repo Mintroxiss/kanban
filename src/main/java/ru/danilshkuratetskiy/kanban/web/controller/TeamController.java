@@ -2,6 +2,7 @@ package ru.danilshkuratetskiy.kanban.web.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import ru.danilshkuratetskiy.kanban.domain.model.Team;
 import ru.danilshkuratetskiy.kanban.domain.service.TeamService;
@@ -24,10 +25,8 @@ public class TeamController {
 
     private final TeamService teamService;
     private final TeamMapper teamMapper;
-
     private final UserMapper userMapper;
     private final EpicMapper epicMapper;
-
     private final TaskMapper taskMapper;
 
     public TeamController(
@@ -45,6 +44,7 @@ public class TeamController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('PROJECT_MANAGER')")
     public ResponseEntity<TeamDto> createTeam(@RequestBody TeamDto dto) {
         Team team = teamMapper.toDomain(dto);
         Team created = teamService.create(team);
@@ -52,6 +52,7 @@ public class TeamController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('PROJECT_MANAGER')")
     public ResponseEntity<TeamDto> updateTeam(@PathVariable UUID id, @RequestBody TeamDto dto) {
         Team team = teamMapper.toDomain(dto);
         Team updated = teamService.update(id, team);
@@ -59,12 +60,14 @@ public class TeamController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('PROJECT_MANAGER', 'TEAM_LEAD')")
     public ResponseEntity<TeamDto> getTeamById(@PathVariable UUID id) {
         Team team = teamService.findById(id);
         return ResponseEntity.ok(teamMapper.toDto(team));
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('PROJECT_MANAGER')")
     public ResponseEntity<List<TeamDto>> getAllTeams() {
         List<TeamDto> teams = teamService.findAll().stream()
                 .map(teamMapper::toDto)
@@ -73,35 +76,30 @@ public class TeamController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('PROJECT_MANAGER')")
     public ResponseEntity<Void> deleteTeam(@PathVariable UUID id) {
         teamService.delete(id);
         return ResponseEntity.noContent().build();
     }
 
-    /**
-     * Возвращает всех пользователей команды
-     */
     @GetMapping("/{teamId}/users")
+    @PreAuthorize("hasAnyRole('PROJECT_MANAGER', 'TEAM_LEAD')")
     public List<UserDto> getUsers(@PathVariable UUID teamId) {
         return teamService.getTeamUsers(teamId).stream()
                 .map(userMapper::toDto)
                 .toList();
     }
 
-    /**
-     * Возвращает все эпики, назначенные команде
-     */
     @GetMapping("/{teamId}/epics")
+    @PreAuthorize("hasAnyRole('PROJECT_MANAGER', 'TEAM_LEAD')")
     public List<EpicDto> getEpics(@PathVariable UUID teamId) {
         return teamService.getTeamEpics(teamId).stream()
                 .map(epicMapper::toDto)
                 .toList();
     }
 
-    /**
-     * Возвращает все задачи команды
-     */
     @GetMapping("/{teamId}/tasks")
+    @PreAuthorize("hasAnyRole('PROJECT_MANAGER', 'TEAM_LEAD')")
     public List<TaskDto> getTasks(@PathVariable UUID teamId) {
         return teamService.getTeamTasks(teamId).stream()
                 .map(taskMapper::toDto)

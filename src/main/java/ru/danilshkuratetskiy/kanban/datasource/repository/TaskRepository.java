@@ -11,6 +11,8 @@ public interface TaskRepository extends JpaRepository<TaskEntity, UUID> {
 
     List<TaskEntity> findAllByColumnIdIn(List<UUID> columnIds);
 
+    List<TaskEntity> findAllByColumnIdInAndEpicId(List<UUID> columnIds, UUID epicId);
+
     List<TaskEntity> findByAssigneeId(UUID assigneeId);
 
     @Query("""

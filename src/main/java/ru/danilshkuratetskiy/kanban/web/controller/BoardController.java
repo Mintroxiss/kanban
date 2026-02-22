@@ -2,6 +2,7 @@ package ru.danilshkuratetskiy.kanban.web.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import ru.danilshkuratetskiy.kanban.domain.model.Board;
 import ru.danilshkuratetskiy.kanban.domain.model.Task;
@@ -22,7 +23,6 @@ public class BoardController {
 
     private final BoardService boardService;
     private final BoardMapper boardMapper;
-
     private final TaskMapper taskMapper;
 
     public BoardController(BoardService boardService, BoardMapper boardMapper, TaskMapper taskMapper) {
@@ -32,6 +32,7 @@ public class BoardController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('PROJECT_MANAGER')")
     public ResponseEntity<BoardDto> createBoard(@RequestBody BoardDto dto) {
         Board board = boardMapper.toDomain(dto);
         Board created = boardService.create(board);
@@ -39,6 +40,7 @@ public class BoardController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('PROJECT_MANAGER')")
     public ResponseEntity<BoardDto> updateBoard(@PathVariable UUID id, @RequestBody BoardDto dto) {
         Board board = boardMapper.toDomain(dto);
         Board updated = boardService.update(id, board);
@@ -60,14 +62,18 @@ public class BoardController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('PROJECT_MANAGER')")
     public ResponseEntity<Void> deleteBoard(@PathVariable UUID id) {
         boardService.delete(id);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{id}/tasks/grouped")
-    public ResponseEntity<Map<UUID, List<TaskDto>>> getGroupedTasks(@PathVariable UUID id) {
-        Map<UUID, List<Task>> groupedTasks = boardService.getBoardTasksGroupedByColumns(id);
+    public ResponseEntity<Map<UUID, List<TaskDto>>> getGroupedTasks(
+            @PathVariable UUID id,
+            @RequestParam(required = false) UUID epicId
+    ) {
+        Map<UUID, List<Task>> groupedTasks = boardService.getBoardTasksGroupedByColumns(id, epicId);
 
         Map<UUID, List<TaskDto>> groupedDtos = groupedTasks.entrySet().stream()
                 .collect(Collectors.toMap(

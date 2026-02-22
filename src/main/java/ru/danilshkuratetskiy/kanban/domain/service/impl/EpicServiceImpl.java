@@ -2,13 +2,16 @@ package ru.danilshkuratetskiy.kanban.domain.service.impl;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.danilshkuratetskiy.kanban.datasource.entity.BoardEntity;
 import ru.danilshkuratetskiy.kanban.datasource.entity.EpicEntity;
 import ru.danilshkuratetskiy.kanban.datasource.entity.TeamEntity;
 import ru.danilshkuratetskiy.kanban.datasource.mapper.EpicEntityMapper;
+import ru.danilshkuratetskiy.kanban.datasource.repository.BoardRepository;
 import ru.danilshkuratetskiy.kanban.datasource.repository.EpicRepository;
 import ru.danilshkuratetskiy.kanban.datasource.repository.TeamRepository;
 import ru.danilshkuratetskiy.kanban.domain.model.Epic;
 import ru.danilshkuratetskiy.kanban.domain.service.EpicService;
+import ru.danilshkuratetskiy.kanban.domain.service.exception.BoardNotFoundException;
 import ru.danilshkuratetskiy.kanban.domain.service.exception.BusinessException;
 import ru.danilshkuratetskiy.kanban.domain.service.exception.EpicNotFoundException;
 import ru.danilshkuratetskiy.kanban.domain.service.exception.TeamNotFoundException;
@@ -22,13 +25,19 @@ public class EpicServiceImpl implements EpicService {
 
     private final EpicRepository epicRepository;
     private final EpicEntityMapper epicMapper;
-
     private final TeamRepository teamRepository;
+    private final BoardRepository boardRepository;
 
-    public EpicServiceImpl(EpicRepository epicRepository, EpicEntityMapper epicMapper, TeamRepository teamRepository) {
+    public EpicServiceImpl(
+            EpicRepository epicRepository,
+            EpicEntityMapper epicMapper,
+            TeamRepository teamRepository,
+            BoardRepository boardRepository
+    ) {
         this.epicRepository = epicRepository;
         this.epicMapper = epicMapper;
         this.teamRepository = teamRepository;
+        this.boardRepository = boardRepository;
     }
 
     @Override
@@ -80,20 +89,21 @@ public class EpicServiceImpl implements EpicService {
     @Override
     @Transactional
     public Epic assignTeam(UUID epicId, UUID teamId) {
-
         EpicEntity epic = epicRepository.findById(epicId)
                 .orElseThrow(() -> new EpicNotFoundException("Epic not found"));
 
         TeamEntity team = teamRepository.findById(teamId)
                 .orElseThrow(() -> new TeamNotFoundException("Team not found"));
 
-        if (!epic.getBoardId().equals(team.getDirectionId())) {
-            throw new BusinessException("Team direction does not match epic");
+        BoardEntity board = boardRepository.findById(epic.getBoardId())
+                .orElseThrow(() -> new BoardNotFoundException("Board not found"));
+
+        if (!board.getDirectionId().equals(team.getDirectionId())) {
+            throw new BusinessException("Team direction does not match epic's board direction");
         }
 
         epic.setTeamId(teamId);
         EpicEntity saved = epicRepository.save(epic);
-
         return epicMapper.toDomain(saved);
     }
 }

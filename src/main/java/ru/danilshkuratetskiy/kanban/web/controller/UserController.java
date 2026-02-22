@@ -2,6 +2,7 @@ package ru.danilshkuratetskiy.kanban.web.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import ru.danilshkuratetskiy.kanban.domain.model.User;
 import ru.danilshkuratetskiy.kanban.domain.service.UserService;
@@ -21,7 +22,6 @@ public class UserController {
 
     private final UserService userService;
     private final UserMapper userMapper;
-
     private final TaskMapper taskMapper;
 
     public UserController(
@@ -35,6 +35,7 @@ public class UserController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('PROJECT_MANAGER')")
     public ResponseEntity<UserDto> createUser(@RequestBody UserDto dto) {
         User user = userMapper.toDomain(dto);
         User created = userService.create(user);
@@ -42,6 +43,7 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('PROJECT_MANAGER')")
     public ResponseEntity<UserDto> updateUser(@PathVariable UUID id, @RequestBody UserDto dto) {
         User user = userMapper.toDomain(dto);
         User updated = userService.update(id, user);
@@ -55,6 +57,7 @@ public class UserController {
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('PROJECT_MANAGER')")
     public ResponseEntity<List<UserDto>> getAllUsers() {
         List<UserDto> users = userService.findAll().stream()
                 .map(userMapper::toDto)
@@ -63,14 +66,12 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('PROJECT_MANAGER')")
     public ResponseEntity<Void> deleteUser(@PathVariable UUID id) {
         userService.delete(id);
         return ResponseEntity.noContent().build();
     }
 
-    /**
-     * Возвращает все задачи, назначенные пользователю
-     */
     @GetMapping("/{userId}/tasks")
     public List<TaskDto> getUserTasks(@PathVariable UUID userId) {
         return userService.getTasks(userId).stream()
@@ -78,10 +79,8 @@ public class UserController {
                 .toList();
     }
 
-    /**
-     * Возвращает нагрузку пользователя
-     */
     @GetMapping("/{userId}/workload")
+    @PreAuthorize("hasAnyRole('PROJECT_MANAGER', 'TEAM_LEAD')")
     public UserWorkloadRequest getWorkload(@PathVariable UUID userId) {
         return userService.getWorkload(userId);
     }

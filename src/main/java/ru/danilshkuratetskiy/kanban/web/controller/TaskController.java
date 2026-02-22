@@ -2,6 +2,7 @@ package ru.danilshkuratetskiy.kanban.web.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import ru.danilshkuratetskiy.kanban.domain.model.Task;
 import ru.danilshkuratetskiy.kanban.domain.model.TaskStatus;
@@ -29,6 +30,7 @@ public class TaskController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('PROJECT_MANAGER', 'TEAM_LEAD')")
     public ResponseEntity<TaskDto> createTask(@RequestBody TaskDto dto) {
         Task task = mapper.toDomain(dto);
         Task created = service.create(task);
@@ -36,6 +38,7 @@ public class TaskController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('PROJECT_MANAGER', 'TEAM_LEAD')")
     public ResponseEntity<TaskDto> updateTask(@PathVariable UUID id, @RequestBody TaskDto dto) {
         Task task = mapper.toDomain(dto);
         Task updated = service.update(id, task);
@@ -57,6 +60,7 @@ public class TaskController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('PROJECT_MANAGER', 'TEAM_LEAD')")
     public ResponseEntity<Void> deleteTask(@PathVariable UUID id) {
         service.delete(id);
         return ResponseEntity.noContent().build();
@@ -71,10 +75,8 @@ public class TaskController {
         return ResponseEntity.ok(tasks);
     }
 
-    /**
-     * Перемещает задачу между колонками
-     */
     @PatchMapping("/{id}/move")
+    @PreAuthorize("hasAnyRole('PROJECT_MANAGER', 'TEAM_LEAD') or @accessControl.isTaskAssignedToMe(#id)")
     public ResponseEntity<TaskDto> moveTask(
             @PathVariable UUID id,
             @RequestBody MoveTaskRequest request
@@ -83,11 +85,8 @@ public class TaskController {
         return ResponseEntity.ok(task);
     }
 
-    /**
-     * Назначает исполнителя на задачу
-     */
     @PatchMapping("/{taskId}/assign")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasAnyRole('PROJECT_MANAGER', 'TEAM_LEAD')")
     public ResponseEntity<TaskDto> assignTask(
             @PathVariable UUID taskId,
             @RequestBody AssignTaskRequest request
@@ -96,11 +95,8 @@ public class TaskController {
         return ResponseEntity.ok(mapper.toDto(task));
     }
 
-    /**
-     * Изменяет статус задачи
-     */
     @PatchMapping("/{taskId}/status")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasAnyRole('PROJECT_MANAGER', 'TEAM_LEAD') or @accessControl.isTaskAssignedToMe(#taskId)")
     public ResponseEntity<TaskDto> changeStatus(
             @PathVariable UUID taskId,
             @RequestBody ChangeTaskStatusRequest request
@@ -110,7 +106,6 @@ public class TaskController {
                 request.status(),
                 request.columnId()
         );
-
         return ResponseEntity.ok(mapper.toDto(task));
     }
 }

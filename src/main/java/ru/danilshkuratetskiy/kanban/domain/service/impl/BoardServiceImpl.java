@@ -90,11 +90,13 @@ public class BoardServiceImpl implements BoardService {
 
     @Override
     @Transactional
-    public Map<UUID, List<Task>> getBoardTasksGroupedByColumns(UUID boardId) {
+    public Map<UUID, List<Task>> getBoardTasksGroupedByColumns(UUID boardId, UUID epicId) {
         List<ColumnEntity> columns = columnRepository.findAllByBoardIdOrderByOrder(boardId);
         List<UUID> columnIds = columns.stream().map(ColumnEntity::getId).toList();
 
-        List<TaskEntity> tasks = taskRepository.findAllByColumnIdIn(columnIds);
+        List<TaskEntity> tasks = (epicId != null)
+                ? taskRepository.findAllByColumnIdInAndEpicId(columnIds, epicId)
+                : taskRepository.findAllByColumnIdIn(columnIds);
 
         return tasks.stream()
                 .map(taskMapper::toDomain)

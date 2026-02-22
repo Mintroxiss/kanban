@@ -2,6 +2,7 @@ package ru.danilshkuratetskiy.kanban.web.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import ru.danilshkuratetskiy.kanban.domain.model.Column;
 import ru.danilshkuratetskiy.kanban.domain.service.ColumnService;
@@ -25,6 +26,7 @@ public class ColumnController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('PROJECT_MANAGER', 'TEAM_LEAD')")
     public ResponseEntity<ColumnDto> createColumn(@RequestBody ColumnDto dto) {
         Column column = mapper.toDomain(dto);
         Column created = service.create(column);
@@ -32,6 +34,7 @@ public class ColumnController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('PROJECT_MANAGER', 'TEAM_LEAD')")
     public ResponseEntity<ColumnDto> updateColumn(@PathVariable UUID id, @RequestBody ColumnDto dto) {
         Column column = mapper.toDomain(dto);
         Column updated = service.update(id, column);
@@ -53,6 +56,7 @@ public class ColumnController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('PROJECT_MANAGER', 'TEAM_LEAD')")
     public ResponseEntity<Void> deleteColumn(@PathVariable UUID id) {
         service.delete(id);
         return ResponseEntity.noContent().build();

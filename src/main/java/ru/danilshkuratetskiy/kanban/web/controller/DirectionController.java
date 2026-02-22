@@ -2,6 +2,7 @@ package ru.danilshkuratetskiy.kanban.web.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import ru.danilshkuratetskiy.kanban.domain.model.Direction;
 import ru.danilshkuratetskiy.kanban.domain.service.DirectionService;
@@ -22,7 +23,6 @@ public class DirectionController {
 
     private final DirectionService directionService;
     private final DirectionMapper directionMapper;
-
     private final BoardMapper boardMapper;
     private final TeamMapper teamMapper;
 
@@ -39,6 +39,7 @@ public class DirectionController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('PROJECT_MANAGER')")
     public ResponseEntity<DirectionDto> createDirection(@RequestBody DirectionDto dto) {
         Direction direction = directionMapper.toDomain(dto);
         Direction created = directionService.create(direction);
@@ -46,6 +47,7 @@ public class DirectionController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('PROJECT_MANAGER')")
     public ResponseEntity<DirectionDto> updateDirection(@PathVariable UUID id, @RequestBody DirectionDto dto) {
         Direction direction = directionMapper.toDomain(dto);
         Direction updated = directionService.update(id, direction);
@@ -67,14 +69,12 @@ public class DirectionController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('PROJECT_MANAGER')")
     public ResponseEntity<Void> deleteDirection(@PathVariable UUID id) {
         directionService.delete(id);
         return ResponseEntity.noContent().build();
     }
 
-    /**
-     * Возвращает все доски направления
-     */
     @GetMapping("/{directionId}/boards")
     public List<BoardDto> getBoards(@PathVariable UUID directionId) {
         return directionService.getBoards(directionId).stream()
@@ -82,10 +82,8 @@ public class DirectionController {
                 .toList();
     }
 
-    /**
-     * Возвращает все команды направления
-     */
     @GetMapping("/{directionId}/teams")
+    @PreAuthorize("hasRole('PROJECT_MANAGER')")
     public List<TeamDto> getTeams(@PathVariable UUID directionId) {
         return directionService.getTeams(directionId).stream()
                 .map(teamMapper::toDto)
