@@ -9,4 +9,7 @@ public class User {
     private UUID id;
     private String fullName;
     private UUID teamId;
+    private String email;
+    private String password;
+    private UserRole role;
 }
