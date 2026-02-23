@@ -47,9 +47,9 @@ public class SecurityConfig {
     @Order(2)
     public SecurityFilterChain webChain(HttpSecurity http) throws Exception {
         return http
-                .securityMatcher("/swagger-ui/**", "/swagger-ui.html", "/api-docs/**", "/login", "/logout")
+                .securityMatcher("/swagger-ui/**", "/swagger-ui.html", "/api-docs/**", "/login", "/logout", "/ws/**")
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/swagger-ui/**", "/api-docs/**", "/login").permitAll()
+                        .requestMatchers("/swagger-ui/**", "/api-docs/**", "/login", "/ws/**").permitAll()
                         .anyRequest().authenticated())
                 .formLogin(form -> form
                         .defaultSuccessUrl("/swagger-ui.html", true))

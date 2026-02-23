@@ -17,6 +17,7 @@ import ru.danilshkuratetskiy.kanban.domain.model.Task;
 import ru.danilshkuratetskiy.kanban.domain.model.TaskStatus;
 import ru.danilshkuratetskiy.kanban.domain.service.TaskService;
 import ru.danilshkuratetskiy.kanban.domain.service.exception.*;
+import ru.danilshkuratetskiy.kanban.websocket.BoardEventService;
 
 import java.util.List;
 import java.util.UUID;
@@ -31,19 +32,22 @@ public class TaskServiceImpl implements TaskService {
     private final UserRepository userRepository;
     private final EpicRepository epicRepository;
     private final ColumnRepository columnRepository;
+    private final BoardEventService boardEventService;
 
     public TaskServiceImpl(
             TaskRepository taskRepository,
             TaskEntityMapper taskMapper,
             UserRepository userRepository,
             EpicRepository epicRepository,
-            ColumnRepository columnRepository
+            ColumnRepository columnRepository,
+            BoardEventService boardEventService
     ) {
         this.taskRepository = taskRepository;
         this.taskMapper = taskMapper;
         this.userRepository = userRepository;
         this.epicRepository = epicRepository;
         this.columnRepository = columnRepository;
+        this.boardEventService = boardEventService;
     }
 
     @Override
@@ -51,7 +55,13 @@ public class TaskServiceImpl implements TaskService {
     public Task create(Task task) {
         TaskEntity entity = taskMapper.toEntity(task);
         TaskEntity saved = taskRepository.save(entity);
-        return taskMapper.toDomain(saved);
+        Task result = taskMapper.toDomain(saved);
+
+        EpicEntity epic = epicRepository.findById(saved.getEpicId())
+                .orElseThrow(() -> new EpicNotFoundException("Epic not found"));
+        boardEventService.publishTaskEvent(epic.getBoardId(), "TASK_CREATED", result);
+
+        return result;
     }
 
     @Override
@@ -67,7 +77,13 @@ public class TaskServiceImpl implements TaskService {
         existing.setColumnId(task.getColumnId());
         existing.setEpicId(task.getEpicId());
         TaskEntity updated = taskRepository.save(existing);
-        return taskMapper.toDomain(updated);
+        Task result = taskMapper.toDomain(updated);
+
+        EpicEntity epic = epicRepository.findById(updated.getEpicId())
+                .orElseThrow(() -> new EpicNotFoundException("Epic not found"));
+        boardEventService.publishTaskEvent(epic.getBoardId(), "TASK_UPDATED", result);
+
+        return result;
     }
 
     @Override
@@ -95,10 +111,16 @@ public class TaskServiceImpl implements TaskService {
     @Override
     @Transactional
     public void delete(UUID id) {
-        if (!taskRepository.existsById(id)) {
-            throw new TaskNotFoundException("Task not found: " + id);
-        }
+        TaskEntity entity = taskRepository.findById(id)
+                .orElseThrow(() -> new TaskNotFoundException("Task not found: " + id));
+        Task task = taskMapper.toDomain(entity);
+
+        EpicEntity epic = epicRepository.findById(entity.getEpicId())
+                .orElseThrow(() -> new EpicNotFoundException("Epic not found"));
+        UUID boardId = epic.getBoardId();
+
         taskRepository.deleteById(id);
+        boardEventService.publishTaskEvent(boardId, "TASK_DELETED", task);
     }
 
     @Override
@@ -119,9 +141,15 @@ public class TaskServiceImpl implements TaskService {
         Task task = taskMapper.toDomain(entity);
         task.setColumnId(columnId);
 
-        return taskMapper.toDomain(
+        Task result = taskMapper.toDomain(
                 taskRepository.save(taskMapper.toEntity(task))
         );
+
+        ColumnEntity column = columnRepository.findById(columnId)
+                .orElseThrow(() -> new ColumnNotFoundException("Column not found"));
+        boardEventService.publishTaskEvent(column.getBoardId(), "TASK_MOVED", result);
+
+        return result;
     }
 
     @Override
@@ -147,7 +175,10 @@ public class TaskServiceImpl implements TaskService {
         task.setAssigneeId(assigneeId);
 
         TaskEntity saved = taskRepository.save(task);
-        return taskMapper.toDomain(saved);
+        Task result = taskMapper.toDomain(saved);
+        boardEventService.publishTaskEvent(epic.getBoardId(), "TASK_UPDATED", result);
+
+        return result;
     }
 
     @Override
@@ -176,6 +207,9 @@ public class TaskServiceImpl implements TaskService {
         task.setColumnId(columnId);
 
         TaskEntity saved = taskRepository.save(task);
-        return taskMapper.toDomain(saved);
+        Task result = taskMapper.toDomain(saved);
+        boardEventService.publishTaskEvent(column.getBoardId(), "TASK_MOVED", result);
+
+        return result;
     }
 }

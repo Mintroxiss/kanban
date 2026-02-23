@@ -1,0 +1,49 @@
+export interface Task {
+  id: string
+  title: string
+  description?: string
+  status: 'TO_DO' | 'IN_PROGRESS' | 'DONE'
+  createdAt: string
+  updatedAt: string
+  deadline: string
+  assigneeId?: string
+  columnId?: string
+  epicId: string
+}
+
+export interface Board {
+  id: string
+  name: string
+  directionId: string
+}
+
+export interface Column {
+  id: string
+  title: string
+  boardId: string
+  order: number
+}
+
+export interface Epic {
+  id: string
+  title: string
+  description?: string
+  boardId: string
+  teamId?: string
+}
+
+export type BoardEventType = 'TASK_CREATED' | 'TASK_MOVED' | 'TASK_UPDATED' | 'TASK_DELETED'
+
+export interface BoardEvent {
+  type: BoardEventType
+  payload: Task
+}
+
+export interface AuthTokens {
+  token: string
+  refreshToken: string
+}
+
+export interface User {
+  email: string
+}
