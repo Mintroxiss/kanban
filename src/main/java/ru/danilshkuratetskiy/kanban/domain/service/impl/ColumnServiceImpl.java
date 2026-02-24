@@ -7,8 +7,10 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.danilshkuratetskiy.kanban.datasource.entity.ColumnEntity;
 import ru.danilshkuratetskiy.kanban.datasource.mapper.ColumnEntityMapper;
 import ru.danilshkuratetskiy.kanban.datasource.repository.ColumnRepository;
+import ru.danilshkuratetskiy.kanban.datasource.repository.TaskRepository;
 import ru.danilshkuratetskiy.kanban.domain.model.Column;
 import ru.danilshkuratetskiy.kanban.domain.service.ColumnService;
+import ru.danilshkuratetskiy.kanban.domain.service.exception.BusinessException;
 import ru.danilshkuratetskiy.kanban.domain.service.exception.ColumnNotFoundException;
 
 import java.util.List;
@@ -20,10 +22,12 @@ public class ColumnServiceImpl implements ColumnService {
 
     private final ColumnRepository repository;
     private final ColumnEntityMapper mapper;
+    private final TaskRepository taskRepository;
 
-    public ColumnServiceImpl(ColumnRepository repository, ColumnEntityMapper mapper) {
+    public ColumnServiceImpl(ColumnRepository repository, ColumnEntityMapper mapper, TaskRepository taskRepository) {
         this.repository = repository;
         this.mapper = mapper;
+        this.taskRepository = taskRepository;
     }
 
     @Override
@@ -73,6 +77,9 @@ public class ColumnServiceImpl implements ColumnService {
     public void delete(UUID id) {
         if (!repository.existsById(id)) {
             throw new ColumnNotFoundException("Column not found: " + id);
+        }
+        if (taskRepository.existsByColumnId(id)) {
+            throw new BusinessException("Нельзя удалить столбец: сначала удалите все задачи из него");
         }
         repository.deleteById(id);
     }

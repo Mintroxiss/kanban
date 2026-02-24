@@ -22,4 +22,10 @@ public class BoardEventService {
         BoardEvent event = new BoardEvent(type, taskMapper.toDto(task));
         messaging.convertAndSend("/topic/board/" + boardId, event);
     }
+
+    public void publishUserNotification(UUID userId, String message) {
+        messaging.convertAndSend("/topic/user/" + userId, new UserNotification(message));
+    }
+
+    public record UserNotification(String message) {}
 }

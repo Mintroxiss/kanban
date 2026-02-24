@@ -42,7 +42,7 @@ public class DirectionController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('PROJECT_MANAGER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<DirectionDto> createDirection(@Valid @RequestBody DirectionDto dto) {
         Direction direction = directionMapper.toDomain(dto);
         Direction created = directionService.create(direction);
@@ -50,7 +50,7 @@ public class DirectionController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('PROJECT_MANAGER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<DirectionDto> updateDirection(@PathVariable UUID id, @Valid @RequestBody DirectionDto dto) {
         Direction direction = directionMapper.toDomain(dto);
         Direction updated = directionService.update(id, direction);
@@ -70,7 +70,7 @@ public class DirectionController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('PROJECT_MANAGER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteDirection(@PathVariable UUID id) {
         directionService.delete(id);
         return ResponseEntity.noContent().build();
@@ -84,7 +84,7 @@ public class DirectionController {
     }
 
     @GetMapping("/{directionId}/teams")
-    @PreAuthorize("hasRole('PROJECT_MANAGER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public List<TeamDto> getTeams(@PathVariable UUID directionId) {
         return directionService.getTeams(directionId).stream()
                 .map(teamMapper::toDto)

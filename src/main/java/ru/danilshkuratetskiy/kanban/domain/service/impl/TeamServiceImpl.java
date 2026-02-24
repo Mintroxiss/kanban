@@ -19,10 +19,12 @@ import ru.danilshkuratetskiy.kanban.domain.model.Epic;
 import ru.danilshkuratetskiy.kanban.domain.model.Task;
 import ru.danilshkuratetskiy.kanban.domain.model.Team;
 import ru.danilshkuratetskiy.kanban.domain.model.User;
+import ru.danilshkuratetskiy.kanban.domain.model.UserRole;
 import ru.danilshkuratetskiy.kanban.domain.service.TeamService;
 import ru.danilshkuratetskiy.kanban.domain.service.exception.BusinessException;
 import ru.danilshkuratetskiy.kanban.domain.service.exception.TeamNotFoundException;
 import ru.danilshkuratetskiy.kanban.domain.service.exception.UserNotFoundException;
+import ru.danilshkuratetskiy.kanban.websocket.BoardEventService;
 
 import java.util.List;
 import java.util.UUID;
@@ -42,6 +44,7 @@ public class TeamServiceImpl implements TeamService {
 
     private final TaskRepository taskRepository;
     private final TaskEntityMapper taskMapper;
+    private final BoardEventService boardEventService;
 
     public TeamServiceImpl(
             TeamRepository teamRepository,
@@ -51,7 +54,8 @@ public class TeamServiceImpl implements TeamService {
             EpicRepository epicRepository,
             EpicEntityMapper epicMapper,
             TaskRepository taskRepository,
-            TaskEntityMapper taskMapper
+            TaskEntityMapper taskMapper,
+            BoardEventService boardEventService
     ) {
         this.teamRepository = teamRepository;
         this.teamMapper = teamMapper;
@@ -61,6 +65,7 @@ public class TeamServiceImpl implements TeamService {
         this.epicMapper = epicMapper;
         this.taskRepository = taskRepository;
         this.taskMapper = taskMapper;
+        this.boardEventService = boardEventService;
     }
 
     @Override
@@ -175,11 +180,27 @@ public class TeamServiceImpl implements TeamService {
     public Team assignTeamLead(UUID teamId, UUID userId) {
         TeamEntity team = teamRepository.findById(teamId)
                 .orElseThrow(() -> new TeamNotFoundException("Team not found: " + teamId));
-        UserEntity user = userRepository.findById(userId)
+        UserEntity newLead = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found: " + userId));
-        if (!teamId.equals(user.getTeamId())) {
+        if (!teamId.equals(newLead.getTeamId())) {
             throw new BusinessException("User is not a member of this team");
         }
+
+        // Demote previous team lead if different person
+        UUID prevLeadId = team.getTeamLeadId();
+        if (prevLeadId != null && !prevLeadId.equals(userId)) {
+            userRepository.findById(prevLeadId).ifPresent(prevLead -> {
+                prevLead.setRole(UserRole.DEVELOPER);
+                userRepository.save(prevLead);
+                boardEventService.publishUserNotification(prevLeadId, "Ваша роль изменена: Разработчик");
+            });
+        }
+
+        // Promote new team lead
+        newLead.setRole(UserRole.TEAM_LEAD);
+        userRepository.save(newLead);
+        boardEventService.publishUserNotification(userId, "Ваша роль изменена: Тимлид");
+
         team.setTeamLeadId(userId);
         return teamMapper.toDomain(teamRepository.save(team));
     }

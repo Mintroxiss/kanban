@@ -28,7 +28,7 @@ public class ColumnController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('PROJECT_MANAGER', 'TEAM_LEAD')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ColumnDto> createColumn(@Valid @RequestBody ColumnDto dto) {
         Column column = mapper.toDomain(dto);
         Column created = service.create(column);
@@ -36,7 +36,7 @@ public class ColumnController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('PROJECT_MANAGER', 'TEAM_LEAD')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ColumnDto> updateColumn(@PathVariable UUID id, @Valid @RequestBody ColumnDto dto) {
         Column column = mapper.toDomain(dto);
         Column updated = service.update(id, column);
@@ -56,7 +56,7 @@ public class ColumnController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('PROJECT_MANAGER', 'TEAM_LEAD')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteColumn(@PathVariable UUID id) {
         service.delete(id);
         return ResponseEntity.noContent().build();

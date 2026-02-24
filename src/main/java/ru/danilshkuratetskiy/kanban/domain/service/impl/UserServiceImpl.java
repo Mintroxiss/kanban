@@ -8,14 +8,18 @@ import ru.danilshkuratetskiy.kanban.datasource.entity.TaskEntity;
 import ru.danilshkuratetskiy.kanban.datasource.entity.UserEntity;
 import ru.danilshkuratetskiy.kanban.datasource.mapper.TaskEntityMapper;
 import ru.danilshkuratetskiy.kanban.datasource.mapper.UserEntityMapper;
+import ru.danilshkuratetskiy.kanban.datasource.entity.TeamEntity;
 import ru.danilshkuratetskiy.kanban.datasource.repository.TaskRepository;
+import ru.danilshkuratetskiy.kanban.datasource.repository.TeamRepository;
 import ru.danilshkuratetskiy.kanban.datasource.repository.UserRepository;
 import ru.danilshkuratetskiy.kanban.domain.model.Task;
 import ru.danilshkuratetskiy.kanban.domain.model.TaskStatus;
 import ru.danilshkuratetskiy.kanban.domain.model.User;
+import ru.danilshkuratetskiy.kanban.domain.model.UserRole;
 import ru.danilshkuratetskiy.kanban.domain.service.UserService;
 import ru.danilshkuratetskiy.kanban.domain.service.exception.UserNotFoundException;
 import ru.danilshkuratetskiy.kanban.web.dto.requests.UserWorkloadRequest;
+import ru.danilshkuratetskiy.kanban.websocket.BoardEventService;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -31,16 +35,24 @@ public class UserServiceImpl implements UserService {
     private final TaskRepository taskRepository;
     private final TaskEntityMapper taskMapper;
 
+    private final TeamRepository teamRepository;
+
+    private final BoardEventService boardEventService;
+
     public UserServiceImpl(
             UserRepository userRepository,
             UserEntityMapper userMapper,
             TaskRepository taskRepository,
-            TaskEntityMapper taskMapper
+            TaskEntityMapper taskMapper,
+            TeamRepository teamRepository,
+            BoardEventService boardEventService
     ) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
         this.taskRepository = taskRepository;
         this.taskMapper = taskMapper;
+        this.teamRepository = teamRepository;
+        this.boardEventService = boardEventService;
     }
 
     @Override
@@ -119,5 +131,48 @@ public class UserServiceImpl implements UserService {
         return tasks.stream()
                 .map(taskMapper::toDomain)
                 .toList();
+    }
+
+    @Override
+    @Transactional
+    public User changeRole(UUID id, UserRole role) {
+        UserEntity entity = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException("User not found: " + id));
+        entity.setRole(role);
+        User updated = userMapper.toDomain(userRepository.save(entity));
+        String roleLabel = role == UserRole.TEAM_LEAD ? "Тимлид" : "Разработчик";
+        boardEventService.publishUserNotification(id, "Ваша роль изменена: " + roleLabel);
+
+        if (entity.getTeamId() != null) {
+            teamRepository.findById(entity.getTeamId()).ifPresent((TeamEntity team) -> {
+                if (role == UserRole.TEAM_LEAD) {
+                    // Demote previous team lead if different person
+                    UUID prevLeadId = team.getTeamLeadId();
+                    if (prevLeadId != null && !prevLeadId.equals(id)) {
+                        userRepository.findById(prevLeadId).ifPresent(prevLead -> {
+                            prevLead.setRole(UserRole.DEVELOPER);
+                            userRepository.save(prevLead);
+                            boardEventService.publishUserNotification(prevLeadId, "Ваша роль изменена: Разработчик");
+                        });
+                    }
+                    team.setTeamLeadId(id);
+                    teamRepository.save(team);
+                } else if (role == UserRole.DEVELOPER && id.equals(team.getTeamLeadId())) {
+                    // Remove as team lead when demoted
+                    team.setTeamLeadId(null);
+                    teamRepository.save(team);
+                }
+            });
+        }
+
+        return updated;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public User findByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .map(userMapper::toDomain)
+                .orElseThrow(() -> new UserNotFoundException("User not found: " + email));
     }
 }

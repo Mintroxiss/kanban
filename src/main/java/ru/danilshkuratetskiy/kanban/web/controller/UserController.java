@@ -12,6 +12,7 @@ import ru.danilshkuratetskiy.kanban.domain.model.User;
 import ru.danilshkuratetskiy.kanban.domain.service.UserService;
 import ru.danilshkuratetskiy.kanban.web.dto.entities.TaskDto;
 import ru.danilshkuratetskiy.kanban.web.dto.entities.UserDto;
+import ru.danilshkuratetskiy.kanban.web.dto.requests.UpdateRoleRequest;
 import ru.danilshkuratetskiy.kanban.web.dto.requests.UserWorkloadRequest;
 import ru.danilshkuratetskiy.kanban.web.mapper.TaskMapper;
 import ru.danilshkuratetskiy.kanban.web.mapper.UserMapper;
@@ -38,7 +39,7 @@ public class UserController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('PROJECT_MANAGER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UserDto> createUser(@Valid @RequestBody UserDto dto) {
         User user = userMapper.toDomain(dto);
         User created = userService.create(user);
@@ -46,7 +47,7 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('PROJECT_MANAGER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UserDto> updateUser(@PathVariable UUID id, @Valid @RequestBody UserDto dto) {
         User user = userMapper.toDomain(dto);
         User updated = userService.update(id, user);
@@ -60,17 +61,26 @@ public class UserController {
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('PROJECT_MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEAM_LEAD')")
     public ResponseEntity<Page<UserDto>> getAllUsers(
             @PageableDefault(size = 20, sort = "fullName") Pageable pageable) {
         return ResponseEntity.ok(userService.findAll(pageable).map(userMapper::toDto));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('PROJECT_MANAGER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteUser(@PathVariable UUID id) {
         userService.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{id}/role")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<UserDto> changeRole(
+            @PathVariable UUID id,
+            @Valid @RequestBody UpdateRoleRequest request) {
+        User updated = userService.changeRole(id, request.role());
+        return ResponseEntity.ok(userMapper.toDto(updated));
     }
 
     @GetMapping("/{userId}/tasks")
@@ -81,7 +91,7 @@ public class UserController {
     }
 
     @GetMapping("/{userId}/workload")
-    @PreAuthorize("hasAnyRole('PROJECT_MANAGER', 'TEAM_LEAD')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEAM_LEAD')")
     public UserWorkloadRequest getWorkload(@PathVariable UUID userId) {
         return userService.getWorkload(userId);
     }

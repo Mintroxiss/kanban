@@ -2,6 +2,7 @@ package ru.danilshkuratetskiy.kanban.domain.service;
 
 import ru.danilshkuratetskiy.kanban.domain.model.Task;
 import ru.danilshkuratetskiy.kanban.domain.model.User;
+import ru.danilshkuratetskiy.kanban.domain.model.UserRole;
 import ru.danilshkuratetskiy.kanban.web.dto.requests.UserWorkloadRequest;
 
 import java.util.List;
@@ -12,4 +13,8 @@ public interface UserService extends Service<User> {
     List<Task> getTasks(UUID userId);
 
     UserWorkloadRequest getWorkload(UUID userId);
+
+    User changeRole(UUID id, UserRole role);
+
+    User findByEmail(String email);
 }

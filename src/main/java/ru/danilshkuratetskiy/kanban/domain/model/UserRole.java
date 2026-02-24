@@ -1,7 +1,7 @@
 package ru.danilshkuratetskiy.kanban.domain.model;
 
 public enum UserRole {
-    PROJECT_MANAGER,
+    ADMIN,
     TEAM_LEAD,
     DEVELOPER
 }

@@ -1,6 +1,11 @@
 import client from './client'
 import type { Board, Task } from '../types'
 
+export async function createBoard(payload: { name: string; directionId: string }): Promise<Board> {
+  const { data } = await client.post<Board>('/boards', payload)
+  return data
+}
+
 interface Page<T> {
   content: T[]
   totalElements: number

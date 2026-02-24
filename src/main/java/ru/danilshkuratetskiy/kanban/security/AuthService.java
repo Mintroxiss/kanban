@@ -34,16 +34,25 @@ public class AuthService {
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setRole(UserRole.DEVELOPER);
 
-        userRepository.save(user);
+        UserEntity saved = userRepository.save(user);
 
-        return jwtService.generateJwtAuthToken(request.getEmail());
+        JwtAuthentificationDto dto = jwtService.generateJwtAuthToken(request.getEmail());
+        dto.setRole(UserRole.DEVELOPER.name());
+        dto.setUserId(saved.getId().toString());
+        return dto;
     }
 
     public JwtAuthentificationDto login(LoginRequest request) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
         );
-        return jwtService.generateJwtAuthToken(request.getEmail());
+        JwtAuthentificationDto dto = jwtService.generateJwtAuthToken(request.getEmail());
+        userRepository.findByEmail(request.getEmail())
+                .ifPresent(u -> {
+                    dto.setRole(u.getRole().name());
+                    dto.setUserId(u.getId().toString());
+                });
+        return dto;
     }
 
     public JwtAuthentificationDto refresh(String refreshToken) {
@@ -51,6 +60,12 @@ public class AuthService {
             throw new InvalidTokenException("Invalid or expired refresh token");
         }
         String email = jwtService.getEmailFromToken(refreshToken);
-        return jwtService.refreshBaseToken(email, refreshToken);
+        JwtAuthentificationDto dto = jwtService.refreshBaseToken(email, refreshToken);
+        userRepository.findByEmail(email)
+                .ifPresent(u -> {
+                    dto.setRole(u.getRole().name());
+                    dto.setUserId(u.getId().toString());
+                });
+        return dto;
     }
 }

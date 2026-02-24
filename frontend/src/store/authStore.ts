@@ -1,10 +1,12 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { AuthTokens } from '../types'
+import type { AuthTokens, UserRole } from '../types'
 
 interface AuthState {
   token: string | null
   refreshToken: string | null
+  role: UserRole | null
+  userId: string | null
   login: (tokens: AuthTokens) => void
   logout: () => void
   setToken: (token: string) => void
@@ -15,8 +17,16 @@ export const useAuthStore = create<AuthState>()(
     (set) => ({
       token: null,
       refreshToken: null,
-      login: (tokens) => set({ token: tokens.token, refreshToken: tokens.refreshToken }),
-      logout: () => set({ token: null, refreshToken: null }),
+      role: null,
+      userId: null,
+      login: (tokens) =>
+        set({
+          token: tokens.token,
+          refreshToken: tokens.refreshToken,
+          role: (tokens.role as UserRole) ?? null,
+          userId: tokens.userId ?? null,
+        }),
+      logout: () => set({ token: null, refreshToken: null, role: null, userId: null }),
       setToken: (token) => set({ token }),
     }),
     { name: 'kanban-auth' }

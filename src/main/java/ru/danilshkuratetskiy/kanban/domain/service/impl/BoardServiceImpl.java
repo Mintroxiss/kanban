@@ -51,6 +51,16 @@ public class BoardServiceImpl implements BoardService {
     public Board create(Board board) {
         BoardEntity entity = boardMapper.toEntity(board);
         BoardEntity saved = boardRepository.save(entity);
+
+        String[] defaultTitles = {"К выполнению", "В работе", "Готово"};
+        for (int i = 0; i < defaultTitles.length; i++) {
+            ColumnEntity col = new ColumnEntity();
+            col.setBoardId(saved.getId());
+            col.setTitle(defaultTitles[i]);
+            col.setOrder(i + 1);
+            columnRepository.save(col);
+        }
+
         return boardMapper.toDomain(saved);
     }
 

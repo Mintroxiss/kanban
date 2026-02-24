@@ -34,7 +34,7 @@ public class TaskController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('PROJECT_MANAGER', 'TEAM_LEAD')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEAM_LEAD')")
     public ResponseEntity<TaskDto> createTask(@Valid @RequestBody TaskDto dto) {
         Task task = mapper.toDomain(dto);
         Task created = service.create(task);
@@ -42,7 +42,7 @@ public class TaskController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('PROJECT_MANAGER', 'TEAM_LEAD')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEAM_LEAD')")
     public ResponseEntity<TaskDto> updateTask(@PathVariable UUID id, @Valid @RequestBody TaskDto dto) {
         Task task = mapper.toDomain(dto);
         Task updated = service.update(id, task);
@@ -62,7 +62,7 @@ public class TaskController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('PROJECT_MANAGER', 'TEAM_LEAD')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEAM_LEAD')")
     public ResponseEntity<Void> deleteTask(@PathVariable UUID id) {
         service.delete(id);
         return ResponseEntity.noContent().build();
@@ -78,7 +78,7 @@ public class TaskController {
     }
 
     @PatchMapping("/{id}/move")
-    @PreAuthorize("hasAnyRole('PROJECT_MANAGER', 'TEAM_LEAD') or @accessControl.isTaskAssignedToMe(#id)")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEAM_LEAD') or @accessControl.isTaskAssignedToMe(#id)")
     public ResponseEntity<TaskDto> moveTask(
             @PathVariable UUID id,
             @Valid @RequestBody MoveTaskRequest request
@@ -88,7 +88,7 @@ public class TaskController {
     }
 
     @PatchMapping("/{taskId}/assign")
-    @PreAuthorize("hasAnyRole('PROJECT_MANAGER', 'TEAM_LEAD')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEAM_LEAD')")
     public ResponseEntity<TaskDto> assignTask(
             @PathVariable UUID taskId,
             @Valid @RequestBody AssignTaskRequest request
@@ -98,7 +98,7 @@ public class TaskController {
     }
 
     @PatchMapping("/{taskId}/status")
-    @PreAuthorize("hasAnyRole('PROJECT_MANAGER', 'TEAM_LEAD') or @accessControl.isTaskAssignedToMe(#taskId)")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEAM_LEAD') or @accessControl.isTaskAssignedToMe(#taskId)")
     public ResponseEntity<TaskDto> changeStatus(
             @PathVariable UUID taskId,
             @Valid @RequestBody ChangeTaskStatusRequest request

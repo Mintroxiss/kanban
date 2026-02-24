@@ -36,7 +36,7 @@ public class BoardController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('PROJECT_MANAGER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<BoardDto> createBoard(@Valid @RequestBody BoardDto dto) {
         Board board = boardMapper.toDomain(dto);
         Board created = boardService.create(board);
@@ -44,7 +44,7 @@ public class BoardController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('PROJECT_MANAGER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<BoardDto> updateBoard(@PathVariable UUID id, @Valid @RequestBody BoardDto dto) {
         Board board = boardMapper.toDomain(dto);
         Board updated = boardService.update(id, board);
@@ -64,7 +64,7 @@ public class BoardController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('PROJECT_MANAGER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteBoard(@PathVariable UUID id) {
         boardService.delete(id);
         return ResponseEntity.noContent().build();

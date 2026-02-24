@@ -29,7 +29,7 @@ public class EpicController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('PROJECT_MANAGER') or (hasRole('TEAM_LEAD') and @accessControl.isBoardInMyDirection(#dto.boardId))")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<EpicDto> createEpic(@Valid @RequestBody EpicDto dto) {
         Epic epic = mapper.toDomain(dto);
         Epic created = service.create(epic);
@@ -37,7 +37,7 @@ public class EpicController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('PROJECT_MANAGER', 'TEAM_LEAD')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEAM_LEAD')")
     public ResponseEntity<EpicDto> updateEpic(@PathVariable UUID id, @Valid @RequestBody EpicDto dto) {
         Epic epic = mapper.toDomain(dto);
         Epic updated = service.update(id, epic);
@@ -57,14 +57,14 @@ public class EpicController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('PROJECT_MANAGER', 'TEAM_LEAD')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEAM_LEAD')")
     public ResponseEntity<Void> deleteEpic(@PathVariable UUID id) {
         service.delete(id);
         return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/{epicId}/assign-team")
-    @PreAuthorize("hasAnyRole('PROJECT_MANAGER', 'TEAM_LEAD')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEAM_LEAD')")
     public ResponseEntity<EpicDto> assignTeam(
             @PathVariable UUID epicId,
             @Valid @RequestBody AssignTeamRequest request

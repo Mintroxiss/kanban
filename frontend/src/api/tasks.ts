@@ -1,6 +1,18 @@
 import client from './client'
 import type { Task } from '../types'
 
+export async function createTask(payload: {
+  title: string
+  description?: string
+  status: string
+  deadline: string
+  epicId: string
+  columnId?: string
+}): Promise<Task> {
+  const { data } = await client.post<Task>('/tasks', payload)
+  return data
+}
+
 export async function moveTask(id: string, columnId: string): Promise<Task> {
   const { data } = await client.patch<Task>(`/tasks/${id}/move`, { columnId })
   return data

@@ -1,10 +1,15 @@
+import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { getBoards } from '../api/boards'
 import { useAuthStore } from '../store/authStore'
+import CreateBoardModal from '../components/CreateBoardModal'
 
 export default function BoardsListPage() {
   const logout = useAuthStore((s) => s.logout)
+  const role = useAuthStore((s) => s.role)
+  const [showCreate, setShowCreate] = useState(false)
+
   const { data: boards = [], isLoading, error } = useQuery({
     queryKey: ['boards'],
     queryFn: getBoards,
@@ -30,12 +35,44 @@ export default function BoardsListPage() {
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b px-6 py-4 flex items-center justify-between">
         <h1 className="text-xl font-bold text-gray-800">Boards</h1>
-        <button
-          onClick={logout}
-          className="text-sm text-gray-500 hover:text-gray-800 transition-colors"
-        >
-          Sign out
-        </button>
+        <div className="flex items-center gap-3">
+          {(role === 'ADMIN' || role === 'TEAM_LEAD') && (
+            <Link
+              to="/teams"
+              className="text-sm text-gray-600 hover:text-gray-900 transition-colors font-medium"
+            >
+              Команды
+            </Link>
+          )}
+          {role === 'ADMIN' && (
+            <>
+              <Link
+                to="/directions"
+                className="text-sm text-gray-600 hover:text-gray-900 transition-colors font-medium"
+              >
+                Направления
+              </Link>
+              <Link
+                to="/users"
+                className="text-sm text-gray-600 hover:text-gray-900 transition-colors font-medium"
+              >
+                Пользователи
+              </Link>
+              <button
+                onClick={() => setShowCreate(true)}
+                className="text-sm bg-blue-600 text-white px-4 py-1.5 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+              >
+                + Новая доска
+              </button>
+            </>
+          )}
+          <button
+            onClick={logout}
+            className="text-sm text-gray-500 hover:text-gray-800 transition-colors"
+          >
+            Sign out
+          </button>
+        </div>
       </header>
 
       <main className="p-6">
@@ -55,6 +92,8 @@ export default function BoardsListPage() {
           </div>
         )}
       </main>
+
+      {showCreate && <CreateBoardModal onClose={() => setShowCreate(false)} />}
     </div>
   )
 }

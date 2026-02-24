@@ -42,8 +42,29 @@ export interface BoardEvent {
 export interface AuthTokens {
   token: string
   refreshToken: string
+  role?: string
+  userId?: string
 }
 
+export interface Direction {
+  id: string
+  name: string
+  description?: string
+}
+
+export type UserRole = 'ADMIN' | 'TEAM_LEAD' | 'DEVELOPER'
+
 export interface User {
+  id: string
+  fullName: string
   email: string
+  role: UserRole
+  teamId?: string
+}
+
+export interface Team {
+  id: string
+  name: string
+  directionId: string
+  teamLeadId?: string
 }
