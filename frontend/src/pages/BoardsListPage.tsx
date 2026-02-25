@@ -1,19 +1,30 @@
-import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useState, useEffect, useCallback } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { getBoards } from '../api/boards'
 import { useAuthStore } from '../store/authStore'
+import { useWebSocket } from '../hooks/useWebSocket'
 import CreateBoardModal from '../components/CreateBoardModal'
 
 export default function BoardsListPage() {
   const logout = useAuthStore((s) => s.logout)
   const role = useAuthStore((s) => s.role)
   const [showCreate, setShowCreate] = useState(false)
+  const queryClient = useQueryClient()
+  const { subscribe } = useWebSocket()
 
   const { data: boards = [], isLoading, error } = useQuery({
     queryKey: ['boards'],
     queryFn: getBoards,
   })
+
+  const handleBoardEvent = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['boards'] })
+  }, [queryClient])
+
+  useEffect(() => {
+    return subscribe('/topic/boards', handleBoardEvent)
+  }, [subscribe, handleBoardEvent])
 
   if (isLoading) {
     return (

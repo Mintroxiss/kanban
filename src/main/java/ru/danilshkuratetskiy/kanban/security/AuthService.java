@@ -39,6 +39,7 @@ public class AuthService {
         JwtAuthentificationDto dto = jwtService.generateJwtAuthToken(request.getEmail());
         dto.setRole(UserRole.DEVELOPER.name());
         dto.setUserId(saved.getId().toString());
+        if (saved.getTeamId() != null) dto.setTeamId(saved.getTeamId().toString());
         return dto;
     }
 
@@ -51,6 +52,7 @@ public class AuthService {
                 .ifPresent(u -> {
                     dto.setRole(u.getRole().name());
                     dto.setUserId(u.getId().toString());
+                    if (u.getTeamId() != null) dto.setTeamId(u.getTeamId().toString());
                 });
         return dto;
     }
@@ -65,6 +67,7 @@ public class AuthService {
                 .ifPresent(u -> {
                     dto.setRole(u.getRole().name());
                     dto.setUserId(u.getId().toString());
+                    if (u.getTeamId() != null) dto.setTeamId(u.getTeamId().toString());
                 });
         return dto;
     }

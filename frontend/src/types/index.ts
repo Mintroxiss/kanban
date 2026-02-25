@@ -32,11 +32,24 @@ export interface Epic {
   teamId?: string
 }
 
-export type BoardEventType = 'TASK_CREATED' | 'TASK_MOVED' | 'TASK_UPDATED' | 'TASK_DELETED'
+export type BoardEventType =
+  | 'TASK_CREATED'
+  | 'TASK_MOVED'
+  | 'TASK_UPDATED'
+  | 'TASK_DELETED'
+  | 'EPIC_CREATED'
+  | 'EPIC_UPDATED'
+  | 'EPIC_DELETED'
+  | 'COLUMN_CREATED'
+  | 'COLUMN_UPDATED'
+  | 'COLUMN_DELETED'
+  | 'BOARD_CREATED'
+  | 'BOARD_UPDATED'
+  | 'BOARD_DELETED'
 
 export interface BoardEvent {
   type: BoardEventType
-  payload: Task
+  payload: Task | Epic | Board | Column
 }
 
 export interface AuthTokens {
@@ -44,6 +57,7 @@ export interface AuthTokens {
   refreshToken: string
   role?: string
   userId?: string
+  teamId?: string
 }
 
 export interface Direction {

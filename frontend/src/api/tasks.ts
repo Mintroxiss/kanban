@@ -8,6 +8,7 @@ export async function createTask(payload: {
   deadline: string
   epicId: string
   columnId?: string
+  assigneeId?: string
 }): Promise<Task> {
   const { data } = await client.post<Task>('/tasks', payload)
   return data
@@ -30,4 +31,24 @@ export async function changeStatus(
 ): Promise<Task> {
   const { data } = await client.patch<Task>(`/tasks/${id}/status`, { status, columnId })
   return data
+}
+
+export async function updateTask(
+  id: string,
+  payload: {
+    title: string
+    description?: string
+    status: string
+    deadline: string
+    epicId: string
+    columnId?: string
+    assigneeId?: string
+  }
+): Promise<Task> {
+  const { data } = await client.put<Task>(`/tasks/${id}`, payload)
+  return data
+}
+
+export async function deleteTask(id: string): Promise<void> {
+  await client.delete(`/tasks/${id}`)
 }

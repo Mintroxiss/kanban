@@ -23,6 +23,14 @@ public class BoardEventService {
         messaging.convertAndSend("/topic/board/" + boardId, event);
     }
 
+    public void publishToBoard(UUID boardId, String type, Object payload) {
+        messaging.convertAndSend("/topic/board/" + boardId, new BoardEvent(type, payload));
+    }
+
+    public void publishToBoards(String type, Object payload) {
+        messaging.convertAndSend("/topic/boards", new BoardEvent(type, payload));
+    }
+
     public void publishUserNotification(UUID userId, String message) {
         messaging.convertAndSend("/topic/user/" + userId, new UserNotification(message));
     }

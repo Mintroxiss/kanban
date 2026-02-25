@@ -8,4 +8,5 @@ public class JwtAuthentificationDto {
     private String refreshToken;
     private String role;
     private String userId;
+    private String teamId;
 }

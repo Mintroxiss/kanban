@@ -1,19 +1,23 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useState, useMemo } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
 import { getGroupedTasks } from '../api/boards'
 import { getColumns } from '../api/columns'
-import { getEpicsByBoard } from '../api/epics'
+import { getEpicsByBoard, claimEpic } from '../api/epics'
+import { getTeams } from '../api/teams'
 import { useBoardSocket } from '../hooks/useBoardSocket'
 import { useAuthStore } from '../store/authStore'
+import { useNotificationStore } from '../store/notificationStore'
 import BoardView from '../components/Board/BoardView'
 import CreateEpicModal from '../components/CreateEpicModal'
-import type { BoardEvent, Task } from '../types'
+import type { BoardEvent, Column, Epic, Task } from '../types'
 
 export default function BoardPage() {
   const { boardId } = useParams<{ boardId: string }>()
   const queryClient = useQueryClient()
   const role = useAuthStore((s) => s.role)
+  const teamId = useAuthStore((s) => s.teamId)
+  const addNotification = useNotificationStore((s) => s.addNotification)
   const [selectedEpicId, setSelectedEpicId] = useState<string>('')
   const [showCreateEpic, setShowCreateEpic] = useState(false)
 
@@ -35,9 +39,84 @@ export default function BoardPage() {
     enabled: !!boardId,
   })
 
+  const { data: teams = [] } = useQuery({
+    queryKey: ['teams'],
+    queryFn: getTeams,
+  })
+
+  // teamId → name для отображения
+  const teamMap = useMemo(
+    () => Object.fromEntries(teams.map((t) => [t.id, t.name])),
+    [teams]
+  )
+
+  const claimMutation = useMutation({
+    mutationFn: (epicId: string) => claimEpic(epicId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['epics', boardId] })
+    },
+    onError: () => {
+      addNotification(
+        'Не удалось взять эпик. Убедитесь, что ваша команда принадлежит тому же направлению.'
+      )
+    },
+  })
+
   const handleEvent = useCallback(
     (event: BoardEvent) => {
-      const { type, payload: task } = event
+      const { type, payload } = event
+
+      // --- Эпики: прямое обновление кэша без сетевого запроса ---
+      if (type === 'EPIC_CREATED') {
+        const epic = payload as Epic
+        queryClient.setQueryData<Epic[]>(['epics', boardId], (old = []) =>
+          old.some((e) => e.id === epic.id) ? old : [...old, epic]
+        )
+        if (role === 'TEAM_LEAD' && !epic.teamId) {
+          addNotification(`Новый эпик "${epic.title}" доступен для взятия в работу`)
+        }
+        return
+      }
+      if (type === 'EPIC_UPDATED') {
+        const epic = payload as Epic
+        queryClient.setQueryData<Epic[]>(['epics', boardId], (old = []) =>
+          old.map((e) => (e.id === epic.id ? epic : e))
+        )
+        return
+      }
+      if (type === 'EPIC_DELETED') {
+        const epic = payload as Epic
+        queryClient.setQueryData<Epic[]>(['epics', boardId], (old = []) =>
+          old.filter((e) => e.id !== epic.id)
+        )
+        return
+      }
+
+      // --- Колонки: прямое обновление кэша ---
+      if (type === 'COLUMN_CREATED') {
+        const col = payload as Column
+        queryClient.setQueryData<Column[]>(['columns', boardId], (old = []) =>
+          old.some((c) => c.id === col.id) ? old : [...old, col]
+        )
+        return
+      }
+      if (type === 'COLUMN_UPDATED') {
+        const col = payload as Column
+        queryClient.setQueryData<Column[]>(['columns', boardId], (old = []) =>
+          old.map((c) => (c.id === col.id ? col : c))
+        )
+        return
+      }
+      if (type === 'COLUMN_DELETED') {
+        const col = payload as Column
+        queryClient.setQueryData<Column[]>(['columns', boardId], (old = []) =>
+          old.filter((c) => c.id !== col.id)
+        )
+        return
+      }
+
+      // --- Задачи ---
+      const task = payload as Task
       queryClient.setQueryData<Record<string, Task[]>>(
         ['grouped-tasks', boardId, selectedEpicId || undefined],
         (old = {}) => {
@@ -59,7 +138,17 @@ export default function BoardPage() {
   useBoardSocket(boardId ?? '', handleEvent)
 
   const isLoading = loadingTasks || loadingColumns || loadingEpics
-  const canManage = role === 'ADMIN' || role === 'TEAM_LEAD'
+  const canManage = role === 'ADMIN'
+  const isAdmin = role === 'ADMIN'
+
+  const selectedEpic: Epic | undefined = epics.find((e) => e.id === selectedEpicId)
+
+  // Тимлид может взять эпик если выбран эпик без команды
+  // (teamId из store — подсказка для UI, бэкенд всё равно валидирует)
+  const canClaimEpic =
+    role === 'TEAM_LEAD' &&
+    !!selectedEpicId &&
+    selectedEpic?.teamId == null
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -70,7 +159,7 @@ export default function BoardPage() {
         <h1 className="text-xl font-bold text-gray-800 mr-auto">Board</h1>
 
         {!loadingEpics && (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <label className="text-sm text-gray-500">Epic:</label>
             <select
               value={selectedEpicId}
@@ -81,13 +170,34 @@ export default function BoardPage() {
               {epics.map((epic) => (
                 <option key={epic.id} value={epic.id}>
                   {epic.title}
+                  {epic.teamId
+                    ? teamMap[epic.teamId] ? ` — ${teamMap[epic.teamId]}` : ''
+                    : ' (без команды)'}
                 </option>
               ))}
             </select>
+
+            {/* Бейдж команды выбранного эпика */}
+            {selectedEpic?.teamId && teamMap[selectedEpic.teamId] && (
+              <span className="text-xs bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-full">
+                Команда: {teamMap[selectedEpic.teamId]}
+              </span>
+            )}
+
+            {/* Тимлид берёт эпик */}
+            {canClaimEpic && (
+              <button
+                disabled={claimMutation.isPending}
+                onClick={() => claimMutation.mutate(selectedEpicId)}
+                className="text-sm bg-green-600 text-white px-3 py-1.5 rounded-lg font-medium hover:bg-green-700 disabled:opacity-50 transition-colors"
+              >
+                {claimMutation.isPending ? '…' : 'Взять эпик'}
+              </button>
+            )}
           </div>
         )}
 
-        {role === 'ADMIN' && (
+        {isAdmin && (
           <button
             onClick={() => setShowCreateEpic(true)}
             className="text-sm bg-indigo-600 text-white px-4 py-1.5 rounded-lg font-medium hover:bg-indigo-700 transition-colors"
@@ -108,7 +218,8 @@ export default function BoardPage() {
             epics={epics}
             selectedEpicId={selectedEpicId}
             canManage={canManage}
-            isAdmin={role === 'ADMIN'}
+            isAdmin={isAdmin}
+            teamId={teamId ?? undefined}
           />
         )}
       </main>

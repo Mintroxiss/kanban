@@ -136,7 +136,7 @@ export default function KanbanColumn({
           }`}
         >
           {tasks.map((task) => (
-            <TaskCard key={task.id} task={task} />
+            <TaskCard key={task.id} task={task} boardId={boardId} epics={epics} isAdmin={isAdmin} />
           ))}
         </div>
       </SortableContext>

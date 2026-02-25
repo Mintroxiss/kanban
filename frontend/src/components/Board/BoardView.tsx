@@ -16,6 +16,7 @@ interface Props {
   selectedEpicId: string
   canManage: boolean
   isAdmin: boolean
+  teamId?: string
 }
 
 function AddColumnPanel({ boardId, nextOrder }: { boardId: string; nextOrder: number }) {
@@ -88,6 +89,7 @@ export default function BoardView({
   selectedEpicId,
   canManage,
   isAdmin,
+  teamId,
 }: Props) {
   const queryClient = useQueryClient()
   const [activeTask, setActiveTask] = useState<Task | null>(null)
@@ -158,6 +160,14 @@ export default function BoardView({
 
   const sortedColumns = [...columns].sort((a, b) => a.order - b.order)
 
+  // TEAM_LEAD видит в форме создания задачи только эпики своей команды
+  const manageableEpics = isAdmin
+    ? epics
+    : epics.filter((e) => e.teamId != null && e.teamId === teamId)
+
+  // Показываем "Add card" только если есть доступные эпики (для TEAM_LEAD)
+  const effectiveCanManage = isAdmin ? canManage : canManage && manageableEpics.length > 0
+
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="flex gap-4 overflow-x-auto pb-4 items-start">
@@ -167,14 +177,16 @@ export default function BoardView({
             column={col}
             tasks={groupedTasks[col.id] ?? []}
             boardId={boardId}
-            epics={epics}
-            defaultEpicId={selectedEpicId || undefined}
-            canManage={canManage}
+            epics={manageableEpics}
+            defaultEpicId={selectedEpicId && manageableEpics.some(e => e.id === selectedEpicId)
+              ? selectedEpicId
+              : undefined}
+            canManage={effectiveCanManage}
             isAdmin={isAdmin}
           />
         ))}
         {isAdmin && (
-          <AddColumnPanel boardId={boardId} nextOrder={sortedColumns.length + 1} />
+          <AddColumnPanel boardId={boardId} nextOrder={sortedColumns.length > 0 ? Math.max(...sortedColumns.map(c => c.order)) + 1 : 1} />
         )}
       </div>
 

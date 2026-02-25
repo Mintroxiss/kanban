@@ -12,6 +12,7 @@ import ru.danilshkuratetskiy.kanban.domain.model.Column;
 import ru.danilshkuratetskiy.kanban.domain.service.ColumnService;
 import ru.danilshkuratetskiy.kanban.web.dto.entities.ColumnDto;
 import ru.danilshkuratetskiy.kanban.web.mapper.ColumnMapper;
+import ru.danilshkuratetskiy.kanban.websocket.BoardEventService;
 
 import java.util.UUID;
 
@@ -21,10 +22,12 @@ public class ColumnController {
 
     private final ColumnService service;
     private final ColumnMapper mapper;
+    private final BoardEventService boardEventService;
 
-    public ColumnController(ColumnService service, ColumnMapper mapper) {
+    public ColumnController(ColumnService service, ColumnMapper mapper, BoardEventService boardEventService) {
         this.service = service;
         this.mapper = mapper;
+        this.boardEventService = boardEventService;
     }
 
     @PostMapping
@@ -32,7 +35,9 @@ public class ColumnController {
     public ResponseEntity<ColumnDto> createColumn(@Valid @RequestBody ColumnDto dto) {
         Column column = mapper.toDomain(dto);
         Column created = service.create(column);
-        return new ResponseEntity<>(mapper.toDto(created), HttpStatus.CREATED);
+        ColumnDto result = mapper.toDto(created);
+        boardEventService.publishToBoard(result.getBoardId(), "COLUMN_CREATED", result);
+        return new ResponseEntity<>(result, HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
@@ -40,7 +45,9 @@ public class ColumnController {
     public ResponseEntity<ColumnDto> updateColumn(@PathVariable UUID id, @Valid @RequestBody ColumnDto dto) {
         Column column = mapper.toDomain(dto);
         Column updated = service.update(id, column);
-        return ResponseEntity.ok(mapper.toDto(updated));
+        ColumnDto result = mapper.toDto(updated);
+        boardEventService.publishToBoard(result.getBoardId(), "COLUMN_UPDATED", result);
+        return ResponseEntity.ok(result);
     }
 
     @GetMapping("/{id}")
@@ -58,7 +65,9 @@ public class ColumnController {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteColumn(@PathVariable UUID id) {
+        ColumnDto dto = mapper.toDto(service.findById(id));
         service.delete(id);
+        boardEventService.publishToBoard(dto.getBoardId(), "COLUMN_DELETED", dto);
         return ResponseEntity.noContent().build();
     }
 }

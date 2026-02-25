@@ -1,7 +1,8 @@
 import { useState, type FormEvent } from 'react'
 import { createPortal } from 'react-dom'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createEpic } from '../api/epics'
+import { getTeams } from '../api/teams'
 
 interface Props {
   boardId: string
@@ -12,6 +13,12 @@ export default function CreateEpicModal({ boardId, onClose }: Props) {
   const queryClient = useQueryClient()
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
+  const [teamId, setTeamId] = useState('')
+
+  const { data: teams = [] } = useQuery({
+    queryKey: ['teams'],
+    queryFn: getTeams,
+  })
 
   const mutation = useMutation({
     mutationFn: createEpic,
@@ -24,7 +31,12 @@ export default function CreateEpicModal({ boardId, onClose }: Props) {
   function handleSubmit(e: FormEvent) {
     e.preventDefault()
     if (!title.trim()) return
-    mutation.mutate({ title: title.trim(), description: description.trim() || undefined, boardId })
+    mutation.mutate({
+      title: title.trim(),
+      description: description.trim() || undefined,
+      boardId,
+      teamId: teamId || undefined,
+    })
   }
 
   return createPortal(
@@ -70,6 +82,24 @@ export default function CreateEpicModal({ boardId, onClose }: Props) {
               placeholder="Describe this epic…"
               className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
             />
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-gray-700">
+              Команда <span className="text-gray-400 font-normal">(необязательно)</span>
+            </label>
+            <select
+              value={teamId}
+              onChange={(e) => setTeamId(e.target.value)}
+              className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+            >
+              <option value="">— Назначить позже —</option>
+              {teams.map((team) => (
+                <option key={team.id} value={team.id}>
+                  {team.name}
+                </option>
+              ))}
+            </select>
           </div>
 
           {mutation.isError && (

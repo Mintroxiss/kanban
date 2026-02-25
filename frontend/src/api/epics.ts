@@ -14,8 +14,14 @@ export async function createEpic(payload: {
   title: string
   description?: string
   boardId: string
+  teamId?: string
 }): Promise<Epic> {
   const { data } = await client.post<Epic>('/epics', payload)
+  return data
+}
+
+export async function claimEpic(epicId: string): Promise<Epic> {
+  const { data } = await client.patch<Epic>(`/epics/${epicId}/claim`)
   return data
 }
 

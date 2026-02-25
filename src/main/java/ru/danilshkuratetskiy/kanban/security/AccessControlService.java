@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import ru.danilshkuratetskiy.kanban.datasource.repository.BoardRepository;
+import ru.danilshkuratetskiy.kanban.datasource.repository.EpicRepository;
 import ru.danilshkuratetskiy.kanban.datasource.repository.TaskRepository;
 import ru.danilshkuratetskiy.kanban.datasource.repository.TeamRepository;
 
@@ -16,6 +17,7 @@ public class AccessControlService {
     private final TeamRepository teamRepository;
     private final TaskRepository taskRepository;
     private final BoardRepository boardRepository;
+    private final EpicRepository epicRepository;
 
     private UserPrincipal principal() {
         return (UserPrincipal) SecurityContextHolder.getContext()
@@ -54,6 +56,34 @@ public class AccessControlService {
         UUID userId = principal().getId();
         return taskRepository.findById(taskId)
                 .map(t -> userId.equals(t.getAssigneeId()))
+                .orElse(false);
+    }
+
+    /** Эпик принадлежит команде текущего пользователя */
+    public boolean isEpicMyTeams(UUID epicId) {
+        UUID myTeamId = principal().getTeamId();
+        if (myTeamId == null) return false;
+        return epicRepository.findById(epicId)
+                .map(e -> myTeamId.equals(e.getTeamId()))
+                .orElse(false);
+    }
+
+    /** Эпик задачи принадлежит команде текущего пользователя */
+    public boolean isEpicAssignedToMyTeam(UUID taskId) {
+        UUID myTeamId = principal().getTeamId();
+        if (myTeamId == null) return false;
+        return taskRepository.findById(taskId)
+                .flatMap(t -> epicRepository.findById(t.getEpicId()))
+                .map(e -> myTeamId.equals(e.getTeamId()))
+                .orElse(false);
+    }
+
+    /** Тимлид может взять эпик: у эпика нет команды, а у пользователя есть команда */
+    public boolean canTeamLeadClaimEpic(UUID epicId) {
+        UUID myTeamId = principal().getTeamId();
+        if (myTeamId == null) return false;
+        return epicRepository.findById(epicId)
+                .map(e -> e.getTeamId() == null)
                 .orElse(false);
     }
 }

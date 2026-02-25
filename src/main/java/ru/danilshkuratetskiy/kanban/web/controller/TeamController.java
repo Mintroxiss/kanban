@@ -89,7 +89,7 @@ public class TeamController {
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Page<TeamDto>> getAllTeams(
             @PageableDefault(size = 20, sort = "name") Pageable pageable) {
         return ResponseEntity.ok(teamService.findAll(pageable).map(teamMapper::toDto));

@@ -15,6 +15,7 @@ import ru.danilshkuratetskiy.kanban.web.dto.entities.BoardDto;
 import ru.danilshkuratetskiy.kanban.web.dto.entities.TaskDto;
 import ru.danilshkuratetskiy.kanban.web.mapper.BoardMapper;
 import ru.danilshkuratetskiy.kanban.web.mapper.TaskMapper;
+import ru.danilshkuratetskiy.kanban.websocket.BoardEventService;
 
 import java.util.List;
 import java.util.Map;
@@ -28,11 +29,14 @@ public class BoardController {
     private final BoardService boardService;
     private final BoardMapper boardMapper;
     private final TaskMapper taskMapper;
+    private final BoardEventService boardEventService;
 
-    public BoardController(BoardService boardService, BoardMapper boardMapper, TaskMapper taskMapper) {
+    public BoardController(BoardService boardService, BoardMapper boardMapper,
+                           TaskMapper taskMapper, BoardEventService boardEventService) {
         this.boardService = boardService;
         this.boardMapper = boardMapper;
         this.taskMapper = taskMapper;
+        this.boardEventService = boardEventService;
     }
 
     @PostMapping
@@ -40,7 +44,9 @@ public class BoardController {
     public ResponseEntity<BoardDto> createBoard(@Valid @RequestBody BoardDto dto) {
         Board board = boardMapper.toDomain(dto);
         Board created = boardService.create(board);
-        return new ResponseEntity<>(boardMapper.toDto(created), HttpStatus.CREATED);
+        BoardDto result = boardMapper.toDto(created);
+        boardEventService.publishToBoards("BOARD_CREATED", result);
+        return new ResponseEntity<>(result, HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
@@ -48,7 +54,9 @@ public class BoardController {
     public ResponseEntity<BoardDto> updateBoard(@PathVariable UUID id, @Valid @RequestBody BoardDto dto) {
         Board board = boardMapper.toDomain(dto);
         Board updated = boardService.update(id, board);
-        return ResponseEntity.ok(boardMapper.toDto(updated));
+        BoardDto result = boardMapper.toDto(updated);
+        boardEventService.publishToBoards("BOARD_UPDATED", result);
+        return ResponseEntity.ok(result);
     }
 
     @GetMapping("/{id}")
@@ -66,7 +74,9 @@ public class BoardController {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteBoard(@PathVariable UUID id) {
+        BoardDto dto = boardMapper.toDto(boardService.findById(id));
         boardService.delete(id);
+        boardEventService.publishToBoards("BOARD_DELETED", dto);
         return ResponseEntity.noContent().build();
     }
 

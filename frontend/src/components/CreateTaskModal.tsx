@@ -1,7 +1,8 @@
 import { useState, type FormEvent } from 'react'
 import { createPortal } from 'react-dom'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createTask } from '../api/tasks'
+import { getUsers } from '../api/users'
 import type { Epic } from '../types'
 
 interface Props {
@@ -12,12 +13,25 @@ interface Props {
   onClose: () => void
 }
 
+const STATUSES = [
+  { value: 'TO_DO', label: 'To Do' },
+  { value: 'IN_PROGRESS', label: 'In Progress' },
+  { value: 'DONE', label: 'Done' },
+]
+
 export default function CreateTaskModal({ boardId, columnId, epics, defaultEpicId, onClose }: Props) {
   const queryClient = useQueryClient()
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [epicId, setEpicId] = useState(defaultEpicId ?? epics[0]?.id ?? '')
   const [deadline, setDeadline] = useState('')
+  const [status, setStatus] = useState('TO_DO')
+  const [assigneeId, setAssigneeId] = useState('')
+
+  const { data: users = [] } = useQuery({
+    queryKey: ['users'],
+    queryFn: getUsers,
+  })
 
   const mutation = useMutation({
     mutationFn: createTask,
@@ -33,10 +47,11 @@ export default function CreateTaskModal({ boardId, columnId, epics, defaultEpicI
     mutation.mutate({
       title: title.trim(),
       description: description.trim() || undefined,
-      status: 'TO_DO',
+      status,
       deadline,
       epicId,
       columnId,
+      assigneeId: assigneeId || undefined,
     })
   }
 
@@ -65,6 +80,7 @@ export default function CreateTaskModal({ boardId, columnId, epics, defaultEpicI
           </p>
         ) : (
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            {/* Title */}
             <div className="flex flex-col gap-1">
               <label className="text-sm font-medium text-gray-700">Title</label>
               <input
@@ -77,6 +93,7 @@ export default function CreateTaskModal({ boardId, columnId, epics, defaultEpicI
               />
             </div>
 
+            {/* Description */}
             <div className="flex flex-col gap-1">
               <label className="text-sm font-medium text-gray-700">
                 Description <span className="text-gray-400 font-normal">(optional)</span>
@@ -90,6 +107,23 @@ export default function CreateTaskModal({ boardId, columnId, epics, defaultEpicI
               />
             </div>
 
+            {/* Status */}
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium text-gray-700">Status</label>
+              <select
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+                className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              >
+                {STATUSES.map((s) => (
+                  <option key={s.value} value={s.value}>
+                    {s.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Epic */}
             <div className="flex flex-col gap-1">
               <label className="text-sm font-medium text-gray-700">Epic</label>
               <select
@@ -106,6 +140,26 @@ export default function CreateTaskModal({ boardId, columnId, epics, defaultEpicI
               </select>
             </div>
 
+            {/* Assignee */}
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium text-gray-700">
+                Assignee <span className="text-gray-400 font-normal">(optional)</span>
+              </label>
+              <select
+                value={assigneeId}
+                onChange={(e) => setAssigneeId(e.target.value)}
+                className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              >
+                <option value="">— Unassigned —</option>
+                {users.map((user) => (
+                  <option key={user.id} value={user.id}>
+                    {user.fullName}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Deadline */}
             <div className="flex flex-col gap-1">
               <label className="text-sm font-medium text-gray-700">Deadline</label>
               <input

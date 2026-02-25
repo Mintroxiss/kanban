@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { useAuthStore } from '../store/authStore'
+import { useNotificationStore } from '../store/notificationStore'
 
 const client = axios.create({ baseURL: '/api' })
 
@@ -17,6 +18,15 @@ client.interceptors.response.use(
   (response) => response,
   async (error) => {
     const original = error.config
+    if (error.response?.status === 403) {
+      const url: string = error.config?.url ?? ''
+      if (url.startsWith('/tasks/')) {
+        useNotificationStore.getState().addNotification(
+          'Взаимодействие с задачами этого эпика недоступно вашей команде.'
+        )
+      }
+    }
+
     if (error.response?.status === 401 && !original._retry && !isRefreshing) {
       original._retry = true
       isRefreshing = true
