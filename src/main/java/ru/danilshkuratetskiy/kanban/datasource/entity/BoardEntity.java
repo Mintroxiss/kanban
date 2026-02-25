@@ -19,4 +19,7 @@ public class BoardEntity {
 
     @Column(name = "direction_id", nullable = false)
     private UUID directionId;
+
+    @Column(nullable = false)
+    private boolean archived;
 }

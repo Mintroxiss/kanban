@@ -1,25 +1,77 @@
-import { useCallback, useState, useMemo } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useCallback, useState, useMemo, useEffect } from 'react'
+import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
-import { getGroupedTasks } from '../api/boards'
+import { getGroupedTasks, getBoard, updateBoard } from '../api/boards'
 import { getColumns } from '../api/columns'
 import { getEpicsByBoard, claimEpic } from '../api/epics'
 import { getTeams } from '../api/teams'
 import { useBoardSocket } from '../hooks/useBoardSocket'
+import { useWebSocket } from '../hooks/useWebSocket'
 import { useAuthStore } from '../store/authStore'
 import { useNotificationStore } from '../store/notificationStore'
 import BoardView from '../components/Board/BoardView'
 import CreateEpicModal from '../components/CreateEpicModal'
-import type { BoardEvent, Column, Epic, Task } from '../types'
+import type { Board, BoardEvent, Column, Epic, Task } from '../types'
 
 export default function BoardPage() {
   const { boardId } = useParams<{ boardId: string }>()
+  const navigate = useNavigate()
   const queryClient = useQueryClient()
   const role = useAuthStore((s) => s.role)
   const teamId = useAuthStore((s) => s.teamId)
   const addNotification = useNotificationStore((s) => s.addNotification)
+  const { subscribe } = useWebSocket()
   const [selectedEpicId, setSelectedEpicId] = useState<string>('')
   const [showCreateEpic, setShowCreateEpic] = useState(false)
+  const [editingName, setEditingName] = useState<string | null>(null)
+
+  useEffect(() => {
+    return subscribe('/topic/boards', (body) => {
+      const event = body as BoardEvent
+      if (event.type === 'BOARD_UPDATED') {
+        const updated = event.payload as Board
+        if (updated.id === boardId) {
+          queryClient.setQueryData(['board', boardId], updated)
+          queryClient.invalidateQueries({ queryKey: ['boards'] })
+        }
+        return
+      }
+      if (event.type === 'BOARD_ARCHIVED' || event.type === 'BOARD_DELETED') {
+        const board = event.payload as Board
+        if (board.id === boardId) {
+          addNotification(
+            event.type === 'BOARD_DELETED'
+              ? 'Доска была удалена администратором'
+              : 'Доска была архивирована администратором'
+          )
+          queryClient.invalidateQueries({ queryKey: ['boards'] })
+          navigate('/boards')
+        }
+      }
+    })
+  }, [subscribe, boardId, navigate, addNotification, queryClient])
+
+  const renameMutation = useMutation({
+    mutationFn: (name: string) =>
+      updateBoard(boardId!, { name, directionId: board!.directionId }),
+    onSuccess: (updated) => {
+      queryClient.setQueryData(['board', boardId], updated)
+      queryClient.invalidateQueries({ queryKey: ['boards'] })
+      setEditingName(null)
+    },
+  })
+
+  function submitRename() {
+    const name = editingName?.trim()
+    if (!name || name === board?.name) { setEditingName(null); return }
+    renameMutation.mutate(name)
+  }
+
+  const { data: board } = useQuery({
+    queryKey: ['board', boardId],
+    queryFn: () => getBoard(boardId!),
+    enabled: !!boardId,
+  })
 
   const { data: groupedTasks = {}, isLoading: loadingTasks } = useQuery({
     queryKey: ['grouped-tasks', boardId, selectedEpicId || undefined],
@@ -156,7 +208,28 @@ export default function BoardPage() {
         <Link to="/boards" className="text-sm text-blue-600 hover:underline">
           ← Boards
         </Link>
-        <h1 className="text-xl font-bold text-gray-800 mr-auto">Board</h1>
+        {isAdmin && editingName !== null ? (
+          <input
+            autoFocus
+            value={editingName}
+            onChange={(e) => setEditingName(e.target.value)}
+            onBlur={submitRename}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') submitRename()
+              if (e.key === 'Escape') setEditingName(null)
+            }}
+            disabled={renameMutation.isPending}
+            className="text-xl font-bold text-gray-800 mr-auto bg-transparent border-b-2 border-blue-500 outline-none px-0"
+          />
+        ) : (
+          <h1
+            className={`text-xl font-bold text-gray-800 mr-auto ${isAdmin ? 'cursor-pointer hover:text-blue-600 transition-colors' : ''}`}
+            onClick={() => isAdmin && setEditingName(board?.name ?? '')}
+            title={isAdmin ? 'Нажмите для редактирования' : undefined}
+          >
+            {board?.name ?? '…'}
+          </h1>
+        )}
 
         {!loadingEpics && (
           <div className="flex items-center gap-2 flex-wrap">

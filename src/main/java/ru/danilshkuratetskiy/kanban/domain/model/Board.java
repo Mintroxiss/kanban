@@ -9,4 +9,5 @@ public class Board {
     private UUID id;
     private String name;
     private UUID directionId;
+    private boolean archived;
 }

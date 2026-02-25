@@ -13,4 +13,5 @@ public class BoardDto {
     private String name;
     @NotNull
     private UUID directionId;
+    private boolean archived;
 }

@@ -7,6 +7,7 @@ import { WebSocketProvider } from './context/WebSocketContext'
 import LoginPage from './pages/LoginPage'
 import BoardsListPage from './pages/BoardsListPage'
 import BoardPage from './pages/BoardPage'
+import ArchivedBoardsPage from './pages/ArchivedBoardsPage'
 import UsersPage from './pages/UsersPage'
 import TeamsPage from './pages/TeamsPage'
 import DirectionsPage from './pages/DirectionsPage'
@@ -53,6 +54,14 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <BoardsListPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/boards/archived"
+            element={
+              <ProtectedRoute>
+                <ArchivedBoardsPage />
               </ProtectedRoute>
             }
           />

@@ -15,6 +15,7 @@ export interface Board {
   id: string
   name: string
   directionId: string
+  archived: boolean
 }
 
 export interface Column {
@@ -46,6 +47,8 @@ export type BoardEventType =
   | 'BOARD_CREATED'
   | 'BOARD_UPDATED'
   | 'BOARD_DELETED'
+  | 'BOARD_ARCHIVED'
+  | 'BOARD_UNARCHIVED'
 
 export interface BoardEvent {
   type: BoardEventType

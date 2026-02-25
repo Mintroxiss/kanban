@@ -6,11 +6,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.danilshkuratetskiy.kanban.datasource.entity.BoardEntity;
 import ru.danilshkuratetskiy.kanban.datasource.entity.ColumnEntity;
+import ru.danilshkuratetskiy.kanban.datasource.entity.EpicEntity;
 import ru.danilshkuratetskiy.kanban.datasource.entity.TaskEntity;
 import ru.danilshkuratetskiy.kanban.datasource.mapper.BoardEntityMapper;
 import ru.danilshkuratetskiy.kanban.datasource.mapper.TaskEntityMapper;
 import ru.danilshkuratetskiy.kanban.datasource.repository.BoardRepository;
 import ru.danilshkuratetskiy.kanban.datasource.repository.ColumnRepository;
+import ru.danilshkuratetskiy.kanban.datasource.repository.EpicRepository;
 import ru.danilshkuratetskiy.kanban.datasource.repository.TaskRepository;
 import ru.danilshkuratetskiy.kanban.domain.model.Board;
 import ru.danilshkuratetskiy.kanban.domain.model.Task;
@@ -29,6 +31,7 @@ public class BoardServiceImpl implements BoardService {
     private final BoardEntityMapper boardMapper;
 
     private final ColumnRepository columnRepository;
+    private final EpicRepository epicRepository;
     private final TaskRepository taskRepository;
     private final TaskEntityMapper taskMapper;
 
@@ -36,12 +39,14 @@ public class BoardServiceImpl implements BoardService {
             BoardRepository boardRepository,
             BoardEntityMapper boardMapper,
             ColumnRepository columnRepository,
+            EpicRepository epicRepository,
             TaskRepository taskRepository,
             TaskEntityMapper taskMapper
     ) {
         this.boardRepository = boardRepository;
         this.boardMapper = boardMapper;
         this.columnRepository = columnRepository;
+        this.epicRepository = epicRepository;
         this.taskRepository = taskRepository;
         this.taskMapper = taskMapper;
     }
@@ -86,7 +91,7 @@ public class BoardServiceImpl implements BoardService {
     @Override
     @Transactional(readOnly = true)
     public List<Board> findAll() {
-        return boardRepository.findAll().stream()
+        return boardRepository.findAllByArchivedFalse().stream()
                 .map(boardMapper::toDomain)
                 .collect(Collectors.toList());
     }
@@ -94,7 +99,7 @@ public class BoardServiceImpl implements BoardService {
     @Override
     @Transactional(readOnly = true)
     public Page<Board> findAll(Pageable pageable) {
-        return boardRepository.findAll(pageable).map(boardMapper::toDomain);
+        return boardRepository.findAllByArchivedFalse(pageable).map(boardMapper::toDomain);
     }
 
     @Override
@@ -103,7 +108,38 @@ public class BoardServiceImpl implements BoardService {
         if (!boardRepository.existsById(id)) {
             throw new BoardNotFoundException("Board not found: " + id);
         }
+        List<UUID> epicIds = epicRepository.findAllByBoardId(id).stream()
+                .map(EpicEntity::getId).toList();
+        if (!epicIds.isEmpty()) {
+            taskRepository.deleteAllByEpicIdIn(epicIds);
+        }
+        epicRepository.deleteAllByBoardId(id);
+        columnRepository.deleteAllByBoardId(id);
         boardRepository.deleteById(id);
+    }
+
+    @Override
+    @Transactional
+    public void archiveBoard(UUID id) {
+        BoardEntity entity = boardRepository.findById(id)
+                .orElseThrow(() -> new BoardNotFoundException("Board not found: " + id));
+        entity.setArchived(true);
+        boardRepository.save(entity);
+    }
+
+    @Override
+    @Transactional
+    public void unarchiveBoard(UUID id) {
+        BoardEntity entity = boardRepository.findById(id)
+                .orElseThrow(() -> new BoardNotFoundException("Board not found: " + id));
+        entity.setArchived(false);
+        boardRepository.save(entity);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<Board> findAllArchived(Pageable pageable) {
+        return boardRepository.findAllByArchivedTrue(pageable).map(boardMapper::toDomain);
     }
 
     @Override

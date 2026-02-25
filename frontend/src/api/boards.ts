@@ -33,3 +33,25 @@ export async function getGroupedTasks(
   )
   return data
 }
+
+export async function updateBoard(id: string, payload: { name: string; directionId: string }): Promise<Board> {
+  const { data } = await client.put<Board>(`/boards/${id}`, payload)
+  return data
+}
+
+export async function archiveBoard(id: string): Promise<void> {
+  await client.delete(`/boards/${id}`)
+}
+
+export async function unarchiveBoard(id: string): Promise<void> {
+  await client.patch(`/boards/${id}/unarchive`)
+}
+
+export async function deleteBoard(id: string): Promise<void> {
+  await client.delete(`/boards/${id}/permanent`)
+}
+
+export async function getArchivedBoards(): Promise<Board[]> {
+  const { data } = await client.get<Page<Board>>('/boards/archived')
+  return data.content
+}

@@ -1,6 +1,7 @@
 package ru.danilshkuratetskiy.kanban.datasource.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import ru.danilshkuratetskiy.kanban.datasource.entity.TaskEntity;
 
@@ -23,4 +24,8 @@ public interface TaskRepository extends JpaRepository<TaskEntity, UUID> {
                 where e.teamId = :teamId
             """)
     List<TaskEntity> findByTeamId(UUID teamId);
+
+    @Modifying
+    @Query("delete from TaskEntity t where t.epicId in :epicIds")
+    void deleteAllByEpicIdIn(List<UUID> epicIds);
 }

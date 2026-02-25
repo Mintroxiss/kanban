@@ -73,11 +73,36 @@ public class BoardController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> archiveBoard(@PathVariable UUID id) {
+        BoardDto dto = boardMapper.toDto(boardService.findById(id));
+        boardService.archiveBoard(id);
+        boardEventService.publishToBoards("BOARD_ARCHIVED", dto);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{id}/unarchive")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<BoardDto> unarchiveBoard(@PathVariable UUID id) {
+        boardService.unarchiveBoard(id);
+        BoardDto result = boardMapper.toDto(boardService.findById(id));
+        boardEventService.publishToBoards("BOARD_UNARCHIVED", result);
+        return ResponseEntity.ok(result);
+    }
+
+    @DeleteMapping("/{id}/permanent")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteBoard(@PathVariable UUID id) {
         BoardDto dto = boardMapper.toDto(boardService.findById(id));
         boardService.delete(id);
         boardEventService.publishToBoards("BOARD_DELETED", dto);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/archived")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Page<BoardDto>> getArchivedBoards(
+            @PageableDefault(size = 20, sort = "name") Pageable pageable) {
+        return ResponseEntity.ok(boardService.findAllArchived(pageable).map(boardMapper::toDto));
     }
 
     @GetMapping("/{id}/tasks/grouped")
