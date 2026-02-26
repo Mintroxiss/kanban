@@ -6,6 +6,6 @@ import ru.danilshkuratetskiy.kanban.web.dto.entities.BoardDto;
 
 @Mapper(componentModel = "spring")
 public interface BoardMapper {
-    BoardDto toDto(Board task);
+    BoardDto toDto(Board board);
     Board toDomain(BoardDto dto);
 }

@@ -11,10 +11,6 @@ import java.util.UUID;
 
 public interface TaskRepository extends JpaRepository<TaskEntity, UUID> {
 
-    boolean existsByColumnId(UUID columnId);
-
-    List<TaskEntity> findAllByColumnIdIn(List<UUID> columnIds);
-
     List<TaskEntity> findAllByColumnIdInAndEpicId(List<UUID> columnIds, UUID epicId);
 
     List<TaskEntity> findAllByEpicId(UUID epicId);

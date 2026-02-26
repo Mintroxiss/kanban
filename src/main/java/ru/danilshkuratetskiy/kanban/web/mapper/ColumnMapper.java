@@ -6,6 +6,6 @@ import ru.danilshkuratetskiy.kanban.web.dto.entities.ColumnDto;
 
 @Mapper(componentModel = "spring")
 public interface ColumnMapper {
-    ColumnDto toDto(Column task);
+    ColumnDto toDto(Column column);
     Column toDomain(ColumnDto dto);
 }

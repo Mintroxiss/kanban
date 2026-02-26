@@ -7,7 +7,7 @@ import ru.danilshkuratetskiy.kanban.web.dto.entities.UserDto;
 
 @Mapper(componentModel = "spring")
 public interface UserMapper {
-    UserDto toDto(User task);
+    UserDto toDto(User user);
 
     @Mapping(target = "password", ignore = true)
     User toDomain(UserDto dto);

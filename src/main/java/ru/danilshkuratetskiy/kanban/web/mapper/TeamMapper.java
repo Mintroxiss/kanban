@@ -6,6 +6,6 @@ import ru.danilshkuratetskiy.kanban.web.dto.entities.TeamDto;
 
 @Mapper(componentModel = "spring")
 public interface TeamMapper {
-    TeamDto toDto(Team task);
+    TeamDto toDto(Team team);
     Team toDomain(TeamDto dto);
 }
