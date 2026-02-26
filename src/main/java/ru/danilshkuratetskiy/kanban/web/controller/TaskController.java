@@ -7,10 +7,13 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import ru.danilshkuratetskiy.kanban.domain.model.Task;
 import ru.danilshkuratetskiy.kanban.domain.model.TaskStatus;
+import ru.danilshkuratetskiy.kanban.domain.model.User;
 import ru.danilshkuratetskiy.kanban.domain.service.TaskService;
+import ru.danilshkuratetskiy.kanban.domain.service.UserService;
 import ru.danilshkuratetskiy.kanban.web.dto.requests.AssignTaskRequest;
 import ru.danilshkuratetskiy.kanban.web.dto.requests.ChangeTaskStatusRequest;
 import ru.danilshkuratetskiy.kanban.web.dto.entities.TaskDto;
@@ -27,10 +30,12 @@ public class TaskController {
 
     private final TaskService service;
     private final TaskMapper mapper;
+    private final UserService userService;
 
-    public TaskController(TaskService service, TaskMapper mapper) {
+    public TaskController(TaskService service, TaskMapper mapper, UserService userService) {
         this.service = service;
         this.mapper = mapper;
+        this.userService = userService;
     }
 
     @PostMapping
@@ -86,6 +91,24 @@ public class TaskController {
     ) {
         TaskDto task = mapper.toDto(service.moveTask(id, request.columnId()));
         return ResponseEntity.ok(task);
+    }
+
+    @PatchMapping("/{taskId}/take")
+    @PreAuthorize("hasRole('ADMIN') or @accessControl.isEpicAssignedToMyTeam(#taskId)")
+    public ResponseEntity<TaskDto> takeTask(
+            @PathVariable UUID taskId,
+            Authentication authentication
+    ) {
+        User currentUser = userService.findByEmail(authentication.getName());
+        Task task = service.assignTask(taskId, currentUser.getId());
+        return ResponseEntity.ok(mapper.toDto(task));
+    }
+
+    @PatchMapping("/{taskId}/release")
+    @PreAuthorize("hasRole('ADMIN') or @accessControl.isTaskAssignedToMe(#taskId) or (hasRole('TEAM_LEAD') and @accessControl.isEpicAssignedToMyTeam(#taskId))")
+    public ResponseEntity<TaskDto> releaseTask(@PathVariable UUID taskId) {
+        Task task = service.releaseTask(taskId);
+        return ResponseEntity.ok(mapper.toDto(task));
     }
 
     @PatchMapping("/{taskId}/assign")

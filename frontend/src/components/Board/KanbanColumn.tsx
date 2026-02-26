@@ -15,6 +15,9 @@ interface Props {
   defaultEpicId?: string
   canManage: boolean
   isAdmin: boolean
+  role?: string
+  userId?: string
+  epicTeamNameMap?: Record<string, string>
 }
 
 export default function KanbanColumn({
@@ -25,6 +28,9 @@ export default function KanbanColumn({
   defaultEpicId,
   canManage,
   isAdmin,
+  role,
+  userId,
+  epicTeamNameMap,
 }: Props) {
   const queryClient = useQueryClient()
   const { setNodeRef, isOver } = useDroppable({ id: column.id })
@@ -136,7 +142,20 @@ export default function KanbanColumn({
           }`}
         >
           {tasks.map((task) => (
-            <TaskCard key={task.id} task={task} boardId={boardId} epics={epics} isAdmin={isAdmin} />
+            <TaskCard
+              key={task.id}
+              task={task}
+              boardId={boardId}
+              epics={epics}
+              isAdmin={isAdmin}
+              canDrag={isAdmin || role === 'TEAM_LEAD' || task.assigneeId === userId}
+              isMyTask={!!userId && task.assigneeId === userId}
+              teamName={epicTeamNameMap?.[task.epicId]}
+              canTake={!isAdmin && !task.assigneeId && epics.some((e) => e.id === task.epicId)}
+              canRelease={!isAdmin && !!task.assigneeId && (role === 'TEAM_LEAD' || task.assigneeId === userId)}
+              canChangeStatus={!isAdmin && !!task.assigneeId && (role === 'TEAM_LEAD' || task.assigneeId === userId)}
+              showDeadlineCountdown={!!task.deadline}
+            />
           ))}
         </div>
       </SortableContext>
@@ -146,7 +165,7 @@ export default function KanbanColumn({
           onClick={() => setShowCreate(true)}
           className="mt-2 text-sm text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg px-2 py-1.5 text-left transition-colors"
         >
-          + Add card
+          + Добавить задачу
         </button>
       )}
 

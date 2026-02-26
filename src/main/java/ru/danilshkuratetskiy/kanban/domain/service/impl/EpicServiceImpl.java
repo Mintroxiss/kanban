@@ -8,10 +8,13 @@ import ru.danilshkuratetskiy.kanban.datasource.entity.BoardEntity;
 import ru.danilshkuratetskiy.kanban.datasource.entity.EpicEntity;
 import ru.danilshkuratetskiy.kanban.datasource.entity.TeamEntity;
 import ru.danilshkuratetskiy.kanban.datasource.mapper.EpicEntityMapper;
+import ru.danilshkuratetskiy.kanban.datasource.mapper.TaskEntityMapper;
 import ru.danilshkuratetskiy.kanban.datasource.repository.BoardRepository;
 import ru.danilshkuratetskiy.kanban.datasource.repository.EpicRepository;
+import ru.danilshkuratetskiy.kanban.datasource.repository.TaskRepository;
 import ru.danilshkuratetskiy.kanban.datasource.repository.TeamRepository;
 import ru.danilshkuratetskiy.kanban.domain.model.Epic;
+import ru.danilshkuratetskiy.kanban.domain.model.Task;
 import ru.danilshkuratetskiy.kanban.domain.service.EpicService;
 import ru.danilshkuratetskiy.kanban.domain.service.exception.BoardNotFoundException;
 import ru.danilshkuratetskiy.kanban.domain.service.exception.BusinessException;
@@ -29,17 +32,23 @@ public class EpicServiceImpl implements EpicService {
     private final EpicEntityMapper epicMapper;
     private final TeamRepository teamRepository;
     private final BoardRepository boardRepository;
+    private final TaskRepository taskRepository;
+    private final TaskEntityMapper taskMapper;
 
     public EpicServiceImpl(
             EpicRepository epicRepository,
             EpicEntityMapper epicMapper,
             TeamRepository teamRepository,
-            BoardRepository boardRepository
+            BoardRepository boardRepository,
+            TaskRepository taskRepository,
+            TaskEntityMapper taskMapper
     ) {
         this.epicRepository = epicRepository;
         this.epicMapper = epicMapper;
         this.teamRepository = teamRepository;
         this.boardRepository = boardRepository;
+        this.taskRepository = taskRepository;
+        this.taskMapper = taskMapper;
     }
 
     @Override
@@ -113,5 +122,57 @@ public class EpicServiceImpl implements EpicService {
         epic.setTeamId(teamId);
         EpicEntity saved = epicRepository.save(epic);
         return epicMapper.toDomain(saved);
+    }
+
+    @Override
+    @Transactional
+    public Epic archiveEpic(UUID epicId) {
+        EpicEntity entity = epicRepository.findById(epicId)
+                .orElseThrow(() -> new EpicNotFoundException("Epic not found: " + epicId));
+        entity.setArchived(true);
+        return epicMapper.toDomain(epicRepository.save(entity));
+    }
+
+    @Override
+    @Transactional
+    public Epic restoreEpic(UUID epicId) {
+        EpicEntity entity = epicRepository.findById(epicId)
+                .orElseThrow(() -> new EpicNotFoundException("Epic not found: " + epicId));
+        entity.setArchived(false);
+        return epicMapper.toDomain(epicRepository.save(entity));
+    }
+
+    @Override
+    @Transactional
+    public void deleteEpicWithTasks(UUID epicId) {
+        if (!epicRepository.existsById(epicId)) {
+            throw new EpicNotFoundException("Epic not found: " + epicId);
+        }
+        taskRepository.deleteAllByEpicIdIn(List.of(epicId));
+        epicRepository.deleteById(epicId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Epic> findActiveByBoard(UUID boardId) {
+        return epicRepository.findAllByBoardIdAndArchivedFalse(boardId).stream()
+                .map(epicMapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Epic> findArchivedByBoard(UUID boardId) {
+        return epicRepository.findAllByBoardIdAndArchivedTrue(boardId).stream()
+                .map(epicMapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Task> getEpicTasks(UUID epicId) {
+        return taskRepository.findAllByEpicId(epicId).stream()
+                .map(taskMapper::toDomain)
+                .collect(Collectors.toList());
     }
 }

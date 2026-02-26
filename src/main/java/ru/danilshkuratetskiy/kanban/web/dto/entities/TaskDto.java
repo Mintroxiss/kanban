@@ -21,6 +21,9 @@ public class TaskDto {
     @NotNull
     private LocalDate deadline;
     private UUID assigneeId;
+    private String assigneeName;
+    private UUID lastAssigneeId;
+    private String lastAssigneeName;
     private UUID columnId;
     @NotNull
     private UUID epicId;

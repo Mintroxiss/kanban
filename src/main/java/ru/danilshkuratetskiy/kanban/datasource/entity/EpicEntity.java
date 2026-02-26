@@ -24,4 +24,7 @@ public class EpicEntity {
 
     @Column(name = "team_id")
     private UUID teamId;
+
+    @Column(nullable = false)
+    private boolean archived;
 }

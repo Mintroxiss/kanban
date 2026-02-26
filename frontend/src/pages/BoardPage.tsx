@@ -1,9 +1,9 @@
-import { useCallback, useState, useMemo, useEffect } from 'react'
+import { useCallback, useState, useMemo, useEffect, useRef } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
 import { getGroupedTasks, getBoard, updateBoard } from '../api/boards'
 import { getColumns } from '../api/columns'
-import { getEpicsByBoard, claimEpic } from '../api/epics'
+import { getEpicsByBoard, claimEpic, archiveEpic, deleteEpic, updateEpic } from '../api/epics'
 import { getTeams } from '../api/teams'
 import { useBoardSocket } from '../hooks/useBoardSocket'
 import { useWebSocket } from '../hooks/useWebSocket'
@@ -19,11 +19,17 @@ export default function BoardPage() {
   const queryClient = useQueryClient()
   const role = useAuthStore((s) => s.role)
   const teamId = useAuthStore((s) => s.teamId)
+  const userId = useAuthStore((s) => s.userId)
   const addNotification = useNotificationStore((s) => s.addNotification)
   const { subscribe } = useWebSocket()
   const [selectedEpicId, setSelectedEpicId] = useState<string>('')
+  const [epicDropdownOpen, setEpicDropdownOpen] = useState(false)
   const [showCreateEpic, setShowCreateEpic] = useState(false)
   const [editingName, setEditingName] = useState<string | null>(null)
+  const [epicPopoverOpen, setEpicPopoverOpen] = useState(false)
+  const [epicTooltipVisible, setEpicTooltipVisible] = useState(false)
+  const [editingEpic, setEditingEpic] = useState<{ title: string; description: string } | null>(null)
+  const epicPopoverRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     return subscribe('/topic/boards', (body) => {
@@ -34,22 +40,33 @@ export default function BoardPage() {
           queryClient.setQueryData(['board', boardId], updated)
           queryClient.invalidateQueries({ queryKey: ['boards'] })
         }
-        return
-      }
-      if (event.type === 'BOARD_ARCHIVED' || event.type === 'BOARD_DELETED') {
-        const board = event.payload as Board
-        if (board.id === boardId) {
-          addNotification(
-            event.type === 'BOARD_DELETED'
-              ? 'Доска была удалена администратором'
-              : 'Доска была архивирована администратором'
-          )
-          queryClient.invalidateQueries({ queryKey: ['boards'] })
-          navigate('/boards')
-        }
       }
     })
-  }, [subscribe, boardId, navigate, addNotification, queryClient])
+  }, [subscribe, boardId, queryClient])
+
+  useEffect(() => {
+    if (!epicPopoverOpen) return
+    function handle(e: MouseEvent) {
+      if (epicPopoverRef.current && !epicPopoverRef.current.contains(e.target as Node)) {
+        setEpicPopoverOpen(false)
+        setEditingEpic(null)
+      }
+    }
+    document.addEventListener('mousedown', handle)
+    return () => document.removeEventListener('mousedown', handle)
+  }, [epicPopoverOpen])
+
+  const updateEpicMutation = useMutation({
+    mutationFn: ({ id, title, description }: { id: string; title: string; description: string }) =>
+      updateEpic(id, { title, description, boardId: boardId!, teamId: selectedEpic?.teamId }),
+    onSuccess: (updated) => {
+      queryClient.setQueryData<Epic[]>(['epics', boardId], (old = []) =>
+        old.map((e) => (e.id === updated.id ? updated : e))
+      )
+      setEpicPopoverOpen(false)
+      setEditingEpic(null)
+    },
+  })
 
   const renameMutation = useMutation({
     mutationFn: (name: string) =>
@@ -67,11 +84,19 @@ export default function BoardPage() {
     renameMutation.mutate(name)
   }
 
-  const { data: board } = useQuery({
+  const { data: board, isError: boardError } = useQuery({
     queryKey: ['board', boardId],
     queryFn: () => getBoard(boardId!),
     enabled: !!boardId,
+    retry: 1,
   })
+
+  // Fallback redirect: board deleted (404), or board archived for non-admins
+  useEffect(() => {
+    if (boardError || (board?.archived && role !== 'ADMIN')) {
+      navigate('/boards', { replace: true })
+    }
+  }, [boardError, board, role, navigate])
 
   const { data: groupedTasks = {}, isLoading: loadingTasks } = useQuery({
     queryKey: ['grouped-tasks', boardId, selectedEpicId || undefined],
@@ -102,6 +127,19 @@ export default function BoardPage() {
     [teams]
   )
 
+  // epicId → teamName (только в режиме "all epics")
+  const epicTeamNameMap = useMemo(
+    () =>
+      !selectedEpicId
+        ? Object.fromEntries(
+            epics
+              .filter((e) => e.teamId && teamMap[e.teamId])
+              .map((e) => [e.id, teamMap[e.teamId!]])
+          )
+        : {},
+    [epics, teamMap, selectedEpicId]
+  )
+
   const claimMutation = useMutation({
     mutationFn: (epicId: string) => claimEpic(epicId),
     onSuccess: () => {
@@ -114,9 +152,42 @@ export default function BoardPage() {
     },
   })
 
+  const archiveEpicMutation = useMutation({
+    mutationFn: (epicId: string) => archiveEpic(epicId),
+    onSuccess: (_, epicId) => {
+      queryClient.setQueryData<Epic[]>(['epics', boardId], (old = []) =>
+        old.filter((e) => e.id !== epicId)
+      )
+      if (selectedEpicId === epicId) setSelectedEpicId('')
+      queryClient.invalidateQueries({ queryKey: ['epics-archived', boardId] })
+    },
+  })
+
+  const deleteEpicMutation = useMutation({
+    mutationFn: (epicId: string) => deleteEpic(epicId),
+    onSuccess: (_, epicId) => {
+      queryClient.setQueryData<Epic[]>(['epics', boardId], (old = []) =>
+        old.filter((e) => e.id !== epicId)
+      )
+      if (selectedEpicId === epicId) setSelectedEpicId('')
+    },
+  })
+
   const handleEvent = useCallback(
     (event: BoardEvent) => {
       const { type, payload } = event
+
+      // --- Доска удалена / заархивирована ---
+      if (type === 'BOARD_ARCHIVED' || type === 'BOARD_DELETED') {
+        addNotification(
+          type === 'BOARD_DELETED'
+            ? 'Доска была удалена администратором'
+            : 'Доска была архивирована администратором'
+        )
+        queryClient.invalidateQueries({ queryKey: ['boards'] })
+        navigate('/boards')
+        return
+      }
 
       // --- Эпики: прямое обновление кэша без сетевого запроса ---
       if (type === 'EPIC_CREATED') {
@@ -141,6 +212,26 @@ export default function BoardPage() {
         queryClient.setQueryData<Epic[]>(['epics', boardId], (old = []) =>
           old.filter((e) => e.id !== epic.id)
         )
+        queryClient.invalidateQueries({ queryKey: ['grouped-tasks', boardId] })
+        return
+      }
+      if (type === 'EPIC_ARCHIVED') {
+        const epic = payload as Epic
+        queryClient.setQueryData<Epic[]>(['epics', boardId], (old = []) =>
+          old.filter((e) => e.id !== epic.id)
+        )
+        if (selectedEpicId === epic.id) {
+          setSelectedEpicId('')
+        }
+        queryClient.invalidateQueries({ queryKey: ['grouped-tasks', boardId] })
+        return
+      }
+      if (type === 'EPIC_RESTORED') {
+        const epic = payload as Epic
+        queryClient.setQueryData<Epic[]>(['epics', boardId], (old = []) =>
+          old.some((e) => e.id === epic.id) ? old : [...old, epic]
+        )
+        queryClient.invalidateQueries({ queryKey: ['grouped-tasks', boardId] })
         return
       }
 
@@ -184,7 +275,7 @@ export default function BoardPage() {
         }
       )
     },
-    [boardId, queryClient, selectedEpicId]
+    [boardId, queryClient, selectedEpicId, addNotification, navigate]
   )
 
   useBoardSocket(boardId ?? '', handleEvent)
@@ -195,18 +286,33 @@ export default function BoardPage() {
 
   const selectedEpic: Epic | undefined = epics.find((e) => e.id === selectedEpicId)
 
-  // Тимлид может взять эпик если выбран эпик без команды
+  // Сбросить выбранный эпик если его больше нет в списке (удалён/заархивирован)
+  useEffect(() => {
+    if (selectedEpicId && !loadingEpics && !epics.some((e) => e.id === selectedEpicId)) {
+      setSelectedEpicId('')
+    }
+  }, [epics, selectedEpicId, loadingEpics])
+
+  // Закрывать попап при смене эпика
+  useEffect(() => {
+    setEpicPopoverOpen(false)
+    setEditingEpic(null)
+    setEpicTooltipVisible(false)
+  }, [selectedEpicId])
+
+  // Тимлид может взять эпик если выбран существующий эпик без команды
   // (teamId из store — подсказка для UI, бэкенд всё равно валидирует)
   const canClaimEpic =
     role === 'TEAM_LEAD' &&
     !!selectedEpicId &&
-    selectedEpic?.teamId == null
+    selectedEpic != null &&
+    selectedEpic.teamId == null
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <header className="bg-white border-b px-6 py-4 flex items-center gap-4 flex-wrap">
-        <Link to="/boards" className="text-sm text-blue-600 hover:underline">
-          ← Boards
+        <Link to={board?.archived ? '/boards/archived' : '/boards'} className="text-sm text-blue-600 hover:underline">
+          ← {board?.archived ? 'Архив' : 'Доски'}
         </Link>
         {isAdmin && editingName !== null ? (
           <input
@@ -233,22 +339,116 @@ export default function BoardPage() {
 
         {!loadingEpics && (
           <div className="flex items-center gap-2 flex-wrap">
-            <label className="text-sm text-gray-500">Epic:</label>
-            <select
-              value={selectedEpicId}
-              onChange={(e) => setSelectedEpicId(e.target.value)}
-              className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-            >
-              <option value="">All epics</option>
-              {epics.map((epic) => (
-                <option key={epic.id} value={epic.id}>
-                  {epic.title}
-                  {epic.teamId
-                    ? teamMap[epic.teamId] ? ` — ${teamMap[epic.teamId]}` : ''
-                    : ' (без команды)'}
-                </option>
-              ))}
-            </select>
+            <label className="text-sm text-gray-500">Эпик:</label>
+            <div className="relative">
+              <button
+                onClick={() => setEpicDropdownOpen((v) => !v)}
+                className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm bg-white hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center gap-2 min-w-[140px]"
+              >
+                <span className="flex-1 text-left">
+                  {selectedEpicId ? (epics.find((e) => e.id === selectedEpicId)?.title ?? 'Все эпики') : 'Все эпики'}
+                </span>
+                <span className="text-gray-400 text-xs">▾</span>
+              </button>
+
+              {epicDropdownOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-10"
+                    onClick={() => setEpicDropdownOpen(false)}
+                  />
+                  <div className="absolute left-0 top-full mt-1 z-20 bg-white border border-gray-200 rounded-lg shadow-lg py-1 min-w-full w-max max-w-xs">
+                    <button
+                      onClick={() => { setSelectedEpicId(''); setEpicDropdownOpen(false) }}
+                      className={`w-full text-left text-sm px-3 py-1.5 hover:bg-gray-50 transition-colors ${!selectedEpicId ? 'font-medium text-blue-600' : 'text-gray-700'}`}
+                    >
+                      Все эпики
+                    </button>
+                    {epics.map((epic) => (
+                      <button
+                        key={epic.id}
+                        onClick={() => { setSelectedEpicId(epic.id); setEpicDropdownOpen(false) }}
+                        className={`w-full text-left text-sm px-3 py-1.5 hover:bg-gray-50 transition-colors ${selectedEpicId === epic.id ? 'font-medium text-blue-600' : 'text-gray-700'}`}
+                      >
+                        {epic.title}
+                        {epic.teamId
+                          ? teamMap[epic.teamId] ? <span className="text-gray-400"> — {teamMap[epic.teamId]}</span> : null
+                          : <span className="text-gray-400"> (без команды)</span>}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Иконка-инфо с описанием эпика */}
+            {selectedEpicId && selectedEpic && (
+              <div className="relative" ref={epicPopoverRef}>
+                {/* Hover-обёртка: покрывает кнопку + тултип без зазора */}
+                <div
+                  onMouseEnter={() => !epicPopoverOpen && setEpicTooltipVisible(true)}
+                  onMouseLeave={() => setEpicTooltipVisible(false)}
+                  className="relative inline-block"
+                >
+                  <button
+                    onClick={() => {
+                      if (isAdmin) {
+                        setEditingEpic({ title: selectedEpic.title, description: selectedEpic.description ?? '' })
+                        setEpicPopoverOpen(true)
+                        setEpicTooltipVisible(false)
+                      }
+                    }}
+                    className={`w-6 h-6 flex items-center justify-center rounded-full text-sm font-medium transition-colors ${isAdmin ? 'text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 cursor-pointer' : 'text-gray-400 cursor-default'}`}
+                  >
+                    ℹ
+                  </button>
+
+                  {epicTooltipVisible && !epicPopoverOpen && (
+                    <div className="absolute right-0 top-full z-30 pt-1">
+                      <div className="bg-gray-800 text-white text-xs rounded-lg px-3 py-2 w-64 max-h-40 overflow-y-auto shadow-xl break-words whitespace-pre-wrap">
+                        {selectedEpic.description
+                          ? selectedEpic.description
+                          : isAdmin ? 'Нажмите для добавления описания' : 'Нет описания'}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {epicPopoverOpen && editingEpic && (
+                  <div className="absolute left-0 top-full mt-2 z-30 bg-white border border-gray-200 rounded-xl shadow-xl p-4 w-80">
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Редактирование эпика</p>
+                    <input
+                      className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm mb-2 outline-none focus:ring-2 focus:ring-indigo-500"
+                      value={editingEpic.title}
+                      onChange={(e) => setEditingEpic({ ...editingEpic, title: e.target.value })}
+                      placeholder="Название"
+                    />
+                    <textarea
+                      className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm resize-none outline-none focus:ring-2 focus:ring-indigo-500"
+                      rows={3}
+                      value={editingEpic.description}
+                      onChange={(e) => setEditingEpic({ ...editingEpic, description: e.target.value })}
+                      placeholder="Описание (необязательно)"
+                    />
+                    <div className="flex justify-end gap-2 mt-3">
+                      <button
+                        onClick={() => { setEpicPopoverOpen(false); setEditingEpic(null) }}
+                        className="text-sm text-gray-500 hover:text-gray-700 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors"
+                      >
+                        Отмена
+                      </button>
+                      <button
+                        disabled={!editingEpic.title.trim() || updateEpicMutation.isPending}
+                        onClick={() => updateEpicMutation.mutate({ id: selectedEpicId, ...editingEpic })}
+                        className="text-sm bg-indigo-600 text-white px-3 py-1.5 rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+                      >
+                        {updateEpicMutation.isPending ? 'Сохранение…' : 'Сохранить'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Бейдж команды выбранного эпика */}
             {selectedEpic?.teamId && teamMap[selectedEpic.teamId] && (
@@ -267,22 +467,60 @@ export default function BoardPage() {
                 {claimMutation.isPending ? '…' : 'Взять эпик'}
               </button>
             )}
+
+            {/* Действия с эпиком — только для админа при выбранном эпике */}
+            {isAdmin && selectedEpicId && (
+              <div className="flex items-center gap-1 border-l border-gray-200 pl-2">
+                <button
+                  disabled={archiveEpicMutation.isPending}
+                  onClick={() => {
+                    if (confirm(`Архивировать эпик «${selectedEpic?.title}»? Его задачи исчезнут с доски.`)) {
+                      archiveEpicMutation.mutate(selectedEpicId)
+                    }
+                  }}
+                  className="text-xs text-amber-600 hover:bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-200 transition-colors disabled:opacity-50"
+                >
+                  Архивировать
+                </button>
+                <button
+                  disabled={deleteEpicMutation.isPending}
+                  onClick={() => {
+                    const epic = epics.find((e) => e.id === selectedEpicId)
+                    if (confirm(`Удалить эпик «${epic?.title}» и все его задачи? Это действие необратимо.`)) {
+                      deleteEpicMutation.mutate(selectedEpicId)
+                    }
+                  }}
+                  className="text-xs text-red-600 hover:bg-red-50 px-2.5 py-1 rounded-lg border border-red-200 transition-colors disabled:opacity-50"
+                >
+                  Удалить
+                </button>
+              </div>
+            )}
           </div>
         )}
 
         {isAdmin && (
-          <button
-            onClick={() => setShowCreateEpic(true)}
-            className="text-sm bg-indigo-600 text-white px-4 py-1.5 rounded-lg font-medium hover:bg-indigo-700 transition-colors"
-          >
-            + New Epic
-          </button>
+          <div className="flex items-center gap-2">
+            <Link
+              to={`/boards/${boardId}/epics/archived`}
+              className="text-sm text-gray-500 hover:text-gray-700 hover:underline"
+            >
+              Архив эпиков →
+            </Link>
+            <button
+              onClick={() => setShowCreateEpic(true)}
+              className="text-sm bg-indigo-600 text-white px-4 py-1.5 rounded-lg font-medium hover:bg-indigo-700 transition-colors"
+            >
+              + Новый эпик
+            </button>
+          </div>
         )}
       </header>
 
+
       <main className="p-6 flex-1">
         {isLoading ? (
-          <p className="text-gray-400">Loading…</p>
+          <p className="text-gray-400">Загрузка…</p>
         ) : (
           <BoardView
             boardId={boardId!}
@@ -293,6 +531,9 @@ export default function BoardPage() {
             canManage={canManage}
             isAdmin={isAdmin}
             teamId={teamId ?? undefined}
+            role={role ?? undefined}
+            userId={userId ?? undefined}
+            epicTeamNameMap={epicTeamNameMap}
           />
         )}
       </main>

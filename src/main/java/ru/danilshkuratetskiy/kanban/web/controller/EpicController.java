@@ -13,10 +13,13 @@ import ru.danilshkuratetskiy.kanban.domain.model.Epic;
 import ru.danilshkuratetskiy.kanban.security.UserPrincipal;
 import ru.danilshkuratetskiy.kanban.domain.service.EpicService;
 import ru.danilshkuratetskiy.kanban.web.dto.entities.EpicDto;
+import ru.danilshkuratetskiy.kanban.web.dto.entities.TaskDto;
 import ru.danilshkuratetskiy.kanban.web.dto.requests.AssignTeamRequest;
 import ru.danilshkuratetskiy.kanban.web.mapper.EpicMapper;
+import ru.danilshkuratetskiy.kanban.web.mapper.TaskMapper;
 import ru.danilshkuratetskiy.kanban.websocket.BoardEventService;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -25,11 +28,13 @@ public class EpicController {
 
     private final EpicService service;
     private final EpicMapper mapper;
+    private final TaskMapper taskMapper;
     private final BoardEventService boardEventService;
 
-    public EpicController(EpicService service, EpicMapper mapper, BoardEventService boardEventService) {
+    public EpicController(EpicService service, EpicMapper mapper, TaskMapper taskMapper, BoardEventService boardEventService) {
         this.service = service;
         this.mapper = mapper;
+        this.taskMapper = taskMapper;
         this.boardEventService = boardEventService;
     }
 
@@ -66,10 +71,10 @@ public class EpicController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEAM_LEAD')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteEpic(@PathVariable UUID id) {
         EpicDto dto = mapper.toDto(service.findById(id));
-        service.delete(id);
+        service.deleteEpicWithTasks(id);
         boardEventService.publishToBoard(dto.getBoardId(), "EPIC_DELETED", dto);
         return ResponseEntity.noContent().build();
     }
@@ -94,4 +99,49 @@ public class EpicController {
         boardEventService.publishToBoard(dto.getBoardId(), "EPIC_UPDATED", dto);
         return ResponseEntity.ok(dto);
     }
+
+    @GetMapping("/board/{boardId}")
+    public ResponseEntity<List<EpicDto>> getActiveEpicsByBoard(@PathVariable UUID boardId) {
+        List<EpicDto> result = service.findActiveByBoard(boardId).stream()
+                .map(mapper::toDto)
+                .toList();
+        return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/board/{boardId}/archived")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<EpicDto>> getArchivedEpicsByBoard(@PathVariable UUID boardId) {
+        List<EpicDto> result = service.findArchivedByBoard(boardId).stream()
+                .map(mapper::toDto)
+                .toList();
+        return ResponseEntity.ok(result);
+    }
+
+    @PatchMapping("/{id}/archive")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<EpicDto> archiveEpic(@PathVariable UUID id) {
+        Epic epic = service.archiveEpic(id);
+        EpicDto dto = mapper.toDto(epic);
+        boardEventService.publishToBoard(dto.getBoardId(), "EPIC_ARCHIVED", dto);
+        return ResponseEntity.ok(dto);
+    }
+
+    @PatchMapping("/{id}/restore")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<EpicDto> restoreEpic(@PathVariable UUID id) {
+        Epic epic = service.restoreEpic(id);
+        EpicDto dto = mapper.toDto(epic);
+        boardEventService.publishToBoard(dto.getBoardId(), "EPIC_RESTORED", dto);
+        return ResponseEntity.ok(dto);
+    }
+
+    @GetMapping("/{id}/tasks")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<TaskDto>> getEpicTasks(@PathVariable UUID id) {
+        List<TaskDto> result = service.getEpicTasks(id).stream()
+                .map(taskMapper::toDto)
+                .toList();
+        return ResponseEntity.ok(result);
+    }
+
 }

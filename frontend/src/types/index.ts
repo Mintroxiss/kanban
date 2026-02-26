@@ -7,6 +7,9 @@ export interface Task {
   updatedAt: string
   deadline: string
   assigneeId?: string
+  assigneeName?: string
+  lastAssigneeId?: string
+  lastAssigneeName?: string
   columnId?: string
   epicId: string
 }
@@ -31,6 +34,7 @@ export interface Epic {
   description?: string
   boardId: string
   teamId?: string
+  archived?: boolean
 }
 
 export type BoardEventType =
@@ -41,6 +45,8 @@ export type BoardEventType =
   | 'EPIC_CREATED'
   | 'EPIC_UPDATED'
   | 'EPIC_DELETED'
+  | 'EPIC_ARCHIVED'
+  | 'EPIC_RESTORED'
   | 'COLUMN_CREATED'
   | 'COLUMN_UPDATED'
   | 'COLUMN_DELETED'

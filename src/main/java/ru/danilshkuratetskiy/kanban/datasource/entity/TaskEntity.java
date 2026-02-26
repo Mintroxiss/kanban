@@ -38,6 +38,9 @@ public class TaskEntity {
     @Column(name = "assignee_id")
     private UUID assigneeId;
 
+    @Column(name = "last_assignee_id")
+    private UUID lastAssigneeId;
+
     @Column(name = "column_id")
     private UUID columnId;
 

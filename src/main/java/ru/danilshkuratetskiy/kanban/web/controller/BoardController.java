@@ -77,6 +77,7 @@ public class BoardController {
         BoardDto dto = boardMapper.toDto(boardService.findById(id));
         boardService.archiveBoard(id);
         boardEventService.publishToBoards("BOARD_ARCHIVED", dto);
+        boardEventService.publishToBoard(id, "BOARD_ARCHIVED", dto);
         return ResponseEntity.noContent().build();
     }
 
@@ -95,6 +96,7 @@ public class BoardController {
         BoardDto dto = boardMapper.toDto(boardService.findById(id));
         boardService.delete(id);
         boardEventService.publishToBoards("BOARD_DELETED", dto);
+        boardEventService.publishToBoard(id, "BOARD_DELETED", dto);
         return ResponseEntity.noContent().build();
     }
 

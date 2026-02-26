@@ -150,7 +150,7 @@ public class BoardServiceImpl implements BoardService {
 
         List<TaskEntity> tasks = (epicId != null)
                 ? taskRepository.findAllByColumnIdInAndEpicId(columnIds, epicId)
-                : taskRepository.findAllByColumnIdIn(columnIds);
+                : taskRepository.findAllByColumnIdInAndEpicArchivedFalse(columnIds);
 
         return tasks.stream()
                 .map(taskMapper::toDomain)

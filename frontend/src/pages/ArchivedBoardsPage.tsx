@@ -11,6 +11,7 @@ export default function ArchivedBoardsPage() {
 
   const handleBoardEvent = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ['boards-archived'] })
+    queryClient.invalidateQueries({ queryKey: ['boards'] })
   }, [queryClient])
 
   useEffect(() => {

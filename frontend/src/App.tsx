@@ -8,6 +8,7 @@ import LoginPage from './pages/LoginPage'
 import BoardsListPage from './pages/BoardsListPage'
 import BoardPage from './pages/BoardPage'
 import ArchivedBoardsPage from './pages/ArchivedBoardsPage'
+import ArchivedEpicsPage from './pages/ArchivedEpicsPage'
 import UsersPage from './pages/UsersPage'
 import TeamsPage from './pages/TeamsPage'
 import DirectionsPage from './pages/DirectionsPage'
@@ -62,6 +63,14 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <ArchivedBoardsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/boards/:boardId/epics/archived"
+            element={
+              <ProtectedRoute>
+                <ArchivedEpicsPage />
               </ProtectedRoute>
             }
           />

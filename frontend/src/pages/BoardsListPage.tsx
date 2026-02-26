@@ -23,6 +23,7 @@ export default function BoardsListPage() {
     mutationFn: (id: string) => archiveBoard(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['boards'] })
+      queryClient.invalidateQueries({ queryKey: ['boards-archived'] })
     },
   })
 
@@ -30,11 +31,13 @@ export default function BoardsListPage() {
     mutationFn: (id: string) => deleteBoard(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['boards'] })
+      queryClient.invalidateQueries({ queryKey: ['boards-archived'] })
     },
   })
 
   const handleBoardEvent = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ['boards'] })
+    queryClient.invalidateQueries({ queryKey: ['boards-archived'] })
   }, [queryClient])
 
   useEffect(() => {
@@ -44,7 +47,7 @@ export default function BoardsListPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-gray-500">Loading boards…</p>
+        <p className="text-gray-500">Загрузка…</p>
       </div>
     )
   }
@@ -52,7 +55,7 @@ export default function BoardsListPage() {
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-red-500">Failed to load boards.</p>
+        <p className="text-red-500">Не удалось загрузить доски.</p>
       </div>
     )
   }
@@ -64,7 +67,7 @@ export default function BoardsListPage() {
       )}
 
       <header className="bg-white border-b px-6 py-4 flex items-center justify-between">
-        <h1 className="text-xl font-bold text-gray-800">Boards</h1>
+        <h1 className="text-xl font-bold text-gray-800">Доски</h1>
         <div className="flex items-center gap-3">
           {(role === 'ADMIN' || role === 'TEAM_LEAD') && (
             <Link
@@ -103,17 +106,17 @@ export default function BoardsListPage() {
             </>
           )}
           <button
-            onClick={logout}
+            onClick={() => { if (confirm('Выйти из аккаунта?')) logout() }}
             className="text-sm text-gray-500 hover:text-gray-800 transition-colors"
           >
-            Sign out
+            Выйти
           </button>
         </div>
       </header>
 
       <main className="p-6">
         {boards.length === 0 ? (
-          <p className="text-gray-400">No boards found.</p>
+          <p className="text-gray-400">Доски не найдены.</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {boards.map((board) => (

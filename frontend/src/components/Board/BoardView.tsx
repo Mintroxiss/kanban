@@ -17,6 +17,9 @@ interface Props {
   canManage: boolean
   isAdmin: boolean
   teamId?: string
+  role?: string
+  userId?: string
+  epicTeamNameMap?: Record<string, string>
 }
 
 function AddColumnPanel({ boardId, nextOrder }: { boardId: string; nextOrder: number }) {
@@ -90,6 +93,9 @@ export default function BoardView({
   canManage,
   isAdmin,
   teamId,
+  role,
+  userId,
+  epicTeamNameMap,
 }: Props) {
   const queryClient = useQueryClient()
   const [activeTask, setActiveTask] = useState<Task | null>(null)
@@ -183,6 +189,9 @@ export default function BoardView({
               : undefined}
             canManage={effectiveCanManage}
             isAdmin={isAdmin}
+            role={role}
+            userId={userId}
+            epicTeamNameMap={epicTeamNameMap}
           />
         ))}
         {isAdmin && (

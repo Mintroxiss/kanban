@@ -49,7 +49,7 @@ export default function CreateEpicModal({ boardId, onClose }: Props) {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-semibold text-gray-800">New Epic</h2>
+          <h2 className="text-lg font-semibold text-gray-800">Новый эпик</h2>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 text-xl leading-none"
@@ -60,26 +60,26 @@ export default function CreateEpicModal({ boardId, onClose }: Props) {
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-gray-700">Title</label>
+            <label className="text-sm font-medium text-gray-700">Название</label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               required
-              placeholder="e.g. User Authentication"
+              placeholder="напр. Аутентификация пользователей"
               className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium text-gray-700">
-              Description <span className="text-gray-400 font-normal">(optional)</span>
+              Описание <span className="text-gray-400 font-normal">(необязательно)</span>
             </label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
-              placeholder="Describe this epic…"
+              placeholder="Описание эпика…"
               className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
             />
           </div>
@@ -103,7 +103,7 @@ export default function CreateEpicModal({ boardId, onClose }: Props) {
           </div>
 
           {mutation.isError && (
-            <p className="text-red-500 text-sm">Failed to create epic. Please try again.</p>
+            <p className="text-red-500 text-sm">Не удалось создать эпик. Попробуйте снова.</p>
           )}
 
           <div className="flex gap-3 justify-end mt-1">
@@ -112,14 +112,14 @@ export default function CreateEpicModal({ boardId, onClose }: Props) {
               onClick={onClose}
               className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors"
             >
-              Cancel
+              Отмена
             </button>
             <button
               type="submit"
               disabled={mutation.isPending}
               className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
             >
-              {mutation.isPending ? 'Creating…' : 'Create'}
+              {mutation.isPending ? 'Создание…' : 'Создать'}
             </button>
           </div>
         </form>

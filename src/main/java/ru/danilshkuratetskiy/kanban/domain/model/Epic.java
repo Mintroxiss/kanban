@@ -11,4 +11,5 @@ public class Epic {
     private String description;
     private UUID boardId;
     private UUID teamId;
+    private boolean archived;
 }

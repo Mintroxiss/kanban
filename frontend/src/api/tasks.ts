@@ -49,6 +49,16 @@ export async function updateTask(
   return data
 }
 
+export async function takeTask(id: string): Promise<Task> {
+  const { data } = await client.patch<Task>(`/tasks/${id}/take`)
+  return data
+}
+
+export async function releaseTask(id: string): Promise<Task> {
+  const { data } = await client.patch<Task>(`/tasks/${id}/release`)
+  return data
+}
+
 export async function deleteTask(id: string): Promise<void> {
   await client.delete(`/tasks/${id}`)
 }

@@ -15,4 +15,5 @@ public class EpicDto {
     @NotNull
     private UUID boardId;
     private UUID teamId;
+    private boolean archived;
 }

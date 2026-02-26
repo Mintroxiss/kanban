@@ -14,9 +14,9 @@ interface Props {
 }
 
 const STATUSES = [
-  { value: 'TO_DO', label: 'To Do' },
-  { value: 'IN_PROGRESS', label: 'In Progress' },
-  { value: 'DONE', label: 'Done' },
+  { value: 'TO_DO', label: 'К выполнению' },
+  { value: 'IN_PROGRESS', label: 'В работе' },
+  { value: 'DONE', label: 'Готово' },
 ]
 
 export default function CreateTaskModal({ boardId, columnId, epics, defaultEpicId, onClose }: Props) {
@@ -24,6 +24,13 @@ export default function CreateTaskModal({ boardId, columnId, epics, defaultEpicI
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [epicId, setEpicId] = useState(defaultEpicId ?? epics[0]?.id ?? '')
+
+  const selectedEpic = epics.find((e) => e.id === epicId)
+
+  function handleEpicChange(newEpicId: string) {
+    setEpicId(newEpicId)
+    setAssigneeId('')
+  }
   const [deadline, setDeadline] = useState('')
   const [status, setStatus] = useState('TO_DO')
   const [assigneeId, setAssigneeId] = useState('')
@@ -33,6 +40,10 @@ export default function CreateTaskModal({ boardId, columnId, epics, defaultEpicI
     queryFn: getUsers,
   })
 
+  const assignableUsers = users.filter(
+    (u) => u.role !== 'ADMIN' && u.teamId === selectedEpic?.teamId
+  )
+
   const mutation = useMutation({
     mutationFn: createTask,
     onSuccess: () => {
@@ -41,9 +52,12 @@ export default function CreateTaskModal({ boardId, columnId, epics, defaultEpicI
     },
   })
 
+  const today = new Date().toISOString().split('T')[0]
+
   function handleSubmit(e: FormEvent) {
     e.preventDefault()
     if (!title.trim() || !epicId || !deadline) return
+    if (deadline < today) return
     mutation.mutate({
       title: title.trim(),
       description: description.trim() || undefined,
@@ -65,7 +79,7 @@ export default function CreateTaskModal({ boardId, columnId, epics, defaultEpicI
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-semibold text-gray-800">New Card</h2>
+          <h2 className="text-lg font-semibold text-gray-800">Новая задача</h2>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 text-xl leading-none"
@@ -76,40 +90,40 @@ export default function CreateTaskModal({ boardId, columnId, epics, defaultEpicI
 
         {epics.length === 0 ? (
           <p className="text-sm text-gray-500">
-            No epics found for this board. Create an epic first before adding cards.
+            Эпиков не найдено. Сначала создайте эпик.
           </p>
         ) : (
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            {/* Title */}
+            {/* Название */}
             <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-gray-700">Title</label>
+              <label className="text-sm font-medium text-gray-700">Название</label>
               <input
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 required
-                placeholder="e.g. Implement login form"
+                placeholder="напр. Реализовать форму входа"
                 className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
-            {/* Description */}
+            {/* Описание */}
             <div className="flex flex-col gap-1">
               <label className="text-sm font-medium text-gray-700">
-                Description <span className="text-gray-400 font-normal">(optional)</span>
+                Описание <span className="text-gray-400 font-normal">(необязательно)</span>
               </label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 rows={2}
-                placeholder="Describe the task…"
+                placeholder="Описание задачи…"
                 className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
               />
             </div>
 
-            {/* Status */}
+            {/* Статус */}
             <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-gray-700">Status</label>
+              <label className="text-sm font-medium text-gray-700">Статус</label>
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
@@ -123,12 +137,12 @@ export default function CreateTaskModal({ boardId, columnId, epics, defaultEpicI
               </select>
             </div>
 
-            {/* Epic */}
+            {/* Эпик */}
             <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-gray-700">Epic</label>
+              <label className="text-sm font-medium text-gray-700">Эпик</label>
               <select
                 value={epicId}
-                onChange={(e) => setEpicId(e.target.value)}
+                onChange={(e) => handleEpicChange(e.target.value)}
                 required
                 className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
               >
@@ -140,18 +154,18 @@ export default function CreateTaskModal({ boardId, columnId, epics, defaultEpicI
               </select>
             </div>
 
-            {/* Assignee */}
+            {/* Исполнитель */}
             <div className="flex flex-col gap-1">
               <label className="text-sm font-medium text-gray-700">
-                Assignee <span className="text-gray-400 font-normal">(optional)</span>
+                Исполнитель <span className="text-gray-400 font-normal">(необязательно)</span>
               </label>
               <select
                 value={assigneeId}
                 onChange={(e) => setAssigneeId(e.target.value)}
                 className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
               >
-                <option value="">— Unassigned —</option>
-                {users.map((user) => (
+                <option value="">— Не назначен —</option>
+                {assignableUsers.map((user) => (
                   <option key={user.id} value={user.id}>
                     {user.fullName}
                   </option>
@@ -159,12 +173,13 @@ export default function CreateTaskModal({ boardId, columnId, epics, defaultEpicI
               </select>
             </div>
 
-            {/* Deadline */}
+            {/* Дедлайн */}
             <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-gray-700">Deadline</label>
+              <label className="text-sm font-medium text-gray-700">Дедлайн</label>
               <input
                 type="date"
                 value={deadline}
+                min={today}
                 onChange={(e) => setDeadline(e.target.value)}
                 required
                 className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -172,7 +187,7 @@ export default function CreateTaskModal({ boardId, columnId, epics, defaultEpicI
             </div>
 
             {mutation.isError && (
-              <p className="text-red-500 text-sm">Failed to create card. Please try again.</p>
+              <p className="text-red-500 text-sm">Не удалось создать задачу. Попробуйте снова.</p>
             )}
 
             <div className="flex gap-3 justify-end mt-1">
@@ -181,14 +196,14 @@ export default function CreateTaskModal({ boardId, columnId, epics, defaultEpicI
                 onClick={onClose}
                 className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors"
               >
-                Cancel
+                Отмена
               </button>
               <button
                 type="submit"
                 disabled={mutation.isPending}
                 className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
               >
-                {mutation.isPending ? 'Creating…' : 'Create'}
+                {mutation.isPending ? 'Создание…' : 'Создать'}
               </button>
             </div>
           </form>

@@ -14,5 +14,7 @@ public interface TaskService extends Service<Task> {
 
     Task assignTask(UUID taskId, UUID assigneeId);
 
+    Task releaseTask(UUID taskId);
+
     Task changeStatus(UUID taskId, TaskStatus newStatus, UUID columnId);
 }

@@ -53,6 +53,9 @@ public class TaskServiceImpl implements TaskService {
     @Override
     @Transactional
     public Task create(Task task) {
+        if (taskRepository.existsByEpicIdAndTitle(task.getEpicId(), task.getTitle())) {
+            throw new BusinessException("Task with title '" + task.getTitle() + "' already exists in this epic");
+        }
         TaskEntity entity = taskMapper.toEntity(task);
         TaskEntity saved = taskRepository.save(entity);
         Task result = taskMapper.toDomain(saved);
@@ -69,6 +72,10 @@ public class TaskServiceImpl implements TaskService {
     public Task update(UUID id, Task task) {
         TaskEntity existing = taskRepository.findById(id)
                 .orElseThrow(() -> new TaskNotFoundException("Task not found: " + id));
+        UUID epicId = task.getEpicId() != null ? task.getEpicId() : existing.getEpicId();
+        if (taskRepository.existsByEpicIdAndTitleAndIdNot(epicId, task.getTitle(), id)) {
+            throw new BusinessException("Task with title '" + task.getTitle() + "' already exists in this epic");
+        }
         existing.setTitle(task.getTitle());
         existing.setDescription(task.getDescription());
         existing.setStatus(task.getStatus());
@@ -173,6 +180,25 @@ public class TaskServiceImpl implements TaskService {
         }
 
         task.setAssigneeId(assigneeId);
+        task.setLastAssigneeId(assigneeId);
+
+        TaskEntity saved = taskRepository.save(task);
+        Task result = taskMapper.toDomain(saved);
+        boardEventService.publishTaskEvent(epic.getBoardId(), "TASK_UPDATED", result);
+
+        return result;
+    }
+
+    @Override
+    @Transactional
+    public Task releaseTask(UUID taskId) {
+        TaskEntity task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new TaskNotFoundException("Task not found"));
+
+        EpicEntity epic = epicRepository.findById(task.getEpicId())
+                .orElseThrow(() -> new EpicNotFoundException("Epic not found"));
+
+        task.setAssigneeId(null);
 
         TaskEntity saved = taskRepository.save(task);
         Task result = taskMapper.toDomain(saved);

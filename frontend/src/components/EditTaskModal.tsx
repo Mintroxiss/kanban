@@ -13,9 +13,9 @@ interface Props {
 }
 
 const STATUSES = [
-  { value: 'TO_DO', label: 'To Do' },
-  { value: 'IN_PROGRESS', label: 'In Progress' },
-  { value: 'DONE', label: 'Done' },
+  { value: 'TO_DO', label: 'К выполнению' },
+  { value: 'IN_PROGRESS', label: 'В работе' },
+  { value: 'DONE', label: 'Готово' },
 ]
 
 export default function EditTaskModal({ task, boardId, epics, onClose }: Props) {
@@ -33,6 +33,8 @@ export default function EditTaskModal({ task, boardId, epics, onClose }: Props) 
     queryFn: getUsers,
   })
 
+  const today = new Date().toISOString().split('T')[0]
+
   const mutation = useMutation({
     mutationFn: () =>
       updateTask(task.id, {
@@ -44,8 +46,18 @@ export default function EditTaskModal({ task, boardId, epics, onClose }: Props) 
         columnId: task.columnId,
         assigneeId: assigneeId || undefined,
       }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['grouped-tasks', boardId] })
+    onSuccess: (updated) => {
+      queryClient.setQueriesData<Record<string, Task[]>>(
+        { queryKey: ['grouped-tasks', boardId] },
+        (old) => {
+          if (!old) return old
+          const next: Record<string, Task[]> = {}
+          for (const [colId, tasks] of Object.entries(old)) {
+            next[colId] = tasks.map((t) => (t.id === updated.id ? updated : t))
+          }
+          return next
+        }
+      )
       onClose()
     },
   })
@@ -53,6 +65,7 @@ export default function EditTaskModal({ task, boardId, epics, onClose }: Props) 
   function handleSubmit(e: FormEvent) {
     e.preventDefault()
     if (!title.trim() || !epicId || !deadline) return
+    if (deadline < today) return
     mutation.mutate()
   }
 
@@ -159,6 +172,7 @@ export default function EditTaskModal({ task, boardId, epics, onClose }: Props) 
             <input
               type="date"
               value={deadline}
+              min={today}
               onChange={(e) => setDeadline(e.target.value)}
               required
               className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"

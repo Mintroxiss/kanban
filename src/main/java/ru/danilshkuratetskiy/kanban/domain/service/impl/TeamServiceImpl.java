@@ -113,9 +113,30 @@ public class TeamServiceImpl implements TeamService {
     @Override
     @Transactional
     public void delete(UUID id) {
-        if (!teamRepository.existsById(id)) {
-            throw new TeamNotFoundException("Team not found: " + id);
+        TeamEntity team = teamRepository.findById(id)
+                .orElseThrow(() -> new TeamNotFoundException("Team not found: " + id));
+
+        // Detach all members; demote the team lead to developer
+        List<UserEntity> members = userRepository.findByTeamId(id);
+        for (UserEntity member : members) {
+            if (member.getId().equals(team.getTeamLeadId())) {
+                member.setRole(UserRole.DEVELOPER);
+            }
+            member.setTeamId(null);
         }
+        userRepository.saveAll(members);
+
+        // Detach epics assigned to this team
+        List<EpicEntity> epics = epicRepository.findByTeamId(id);
+        for (EpicEntity epic : epics) {
+            epic.setTeamId(null);
+        }
+        epicRepository.saveAll(epics);
+
+        // Clear team_lead_id FK before deletion
+        team.setTeamLeadId(null);
+        teamRepository.save(team);
+
         teamRepository.deleteById(id);
     }
 
@@ -186,13 +207,15 @@ public class TeamServiceImpl implements TeamService {
             throw new BusinessException("User is not a member of this team");
         }
 
-        // Demote previous team lead if different person
+        // Demote previous team lead only if they are still a member of this team
         UUID prevLeadId = team.getTeamLeadId();
         if (prevLeadId != null && !prevLeadId.equals(userId)) {
             userRepository.findById(prevLeadId).ifPresent(prevLead -> {
-                prevLead.setRole(UserRole.DEVELOPER);
-                userRepository.save(prevLead);
-                boardEventService.publishUserNotification(prevLeadId, "Ваша роль изменена: Разработчик");
+                if (teamId.equals(prevLead.getTeamId())) {
+                    prevLead.setRole(UserRole.DEVELOPER);
+                    userRepository.save(prevLead);
+                    boardEventService.publishUserNotification(prevLeadId, "Ваша роль изменена: Разработчик");
+                }
             });
         }
 

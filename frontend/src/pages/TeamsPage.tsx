@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, Navigate } from 'react-router-dom'
+import { Link, Navigate, useLocation } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuthStore } from '../store/authStore'
 import { getDirections } from '../api/directions'
@@ -68,18 +68,16 @@ function TeamMembersPanel({
 
   const setLead = useMutation({
     mutationFn: (userId: string) => assignTeamLead(team.id, userId),
-    onSuccess: (updated) => {
-      queryClient.setQueryData<Team[]>(['teams'], (old = []) =>
-        old.map((t) => (t.id === updated.id ? updated : t)),
-      )
-      queryClient.setQueryData<Team>(['team', team.id], updated)
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['teams'] })
       queryClient.invalidateQueries({ queryKey: ['team', team.id] })
+      queryClient.invalidateQueries({ queryKey: ['team-users', team.id] })
+      queryClient.invalidateQueries({ queryKey: ['users'] })
     },
   })
 
   const memberIds = new Set(members.map((m) => m.id))
-  const nonMembers = allUsers.filter((u) => !memberIds.has(u.id))
+  const nonMembers = allUsers.filter((u) => !memberIds.has(u.id) && u.role !== 'ADMIN' && !u.teamId)
 
   if (isLoading) {
     return <p className="px-5 py-3 text-sm text-gray-400">Загрузка...</p>
@@ -95,12 +93,13 @@ function TeamMembersPanel({
             <div key={member.id} className="flex items-center justify-between py-2">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-sm font-medium text-gray-800">{member.fullName}</span>
-                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${ROLE_BADGE[member.role]}`}>
-                  {ROLE_LABELS[member.role]}
-                </span>
-                {member.id === team.teamLeadId && (
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700 font-medium">
+                {member.id === team.teamLeadId ? (
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-medium">
                     Тимлид команды
+                  </span>
+                ) : (
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${ROLE_BADGE[member.role]}`}>
+                    {ROLE_LABELS[member.role]}
                   </span>
                 )}
               </div>
@@ -178,7 +177,9 @@ export default function TeamsPage() {
   const role = useAuthStore((s) => s.role)
   const userId = useAuthStore((s) => s.userId)
 
+  const location = useLocation()
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [search, setSearch] = useState<string>((location.state as { search?: string })?.search ?? '')
   const [showCreate, setShowCreate] = useState(false)
   const [createName, setCreateName] = useState('')
   const [createDirectionId, setCreateDirectionId] = useState('')
@@ -223,8 +224,10 @@ export default function TeamsPage() {
   const createMutation = useMutation({
     mutationFn: () => createTeam(createName.trim(), createDirectionId),
     onSuccess: () => {
+      const name = createName.trim()
       queryClient.invalidateQueries({ queryKey: ['teams'] })
       setShowCreate(false)
+      setSearch(name)
       setCreateName('')
       setCreateDirectionId('')
     },
@@ -245,6 +248,7 @@ export default function TeamsPage() {
     mutationFn: (id: string) => deleteTeam(id),
     onSuccess: (_, id) => {
       queryClient.setQueryData<Team[]>(['teams'], (old = []) => old.filter((t) => t.id !== id))
+      queryClient.invalidateQueries({ queryKey: ['users'] })
       setConfirmDeleteId(null)
       if (expandedId === id) setExpandedId(null)
     },
@@ -296,13 +300,18 @@ export default function TeamsPage() {
   // ── ADMIN view ──────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link to="/boards" className="text-sm text-blue-600 hover:underline">
-            ← Доски
-          </Link>
-          <h1 className="text-xl font-bold text-gray-800">Команды</h1>
-        </div>
+      <header className="bg-white border-b px-6 py-4 flex items-center gap-4">
+        <Link to="/boards" className="text-sm text-blue-600 hover:underline">
+          ← Доски
+        </Link>
+        <h1 className="text-xl font-bold text-gray-800">Команды</h1>
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Поиск по названию…"
+          className="ml-auto border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-52"
+        />
         <button
           onClick={() => {
             setShowCreate(true)
@@ -369,7 +378,10 @@ export default function TeamsPage() {
           </div>
         ) : (
           <div className="bg-white rounded-xl border border-gray-200 overflow-hidden divide-y divide-gray-100">
-            {teams.map((team) => {
+            {teams.filter((t) => t.name.toLowerCase().includes(search.toLowerCase())).length === 0 && (
+              <p className="px-5 py-4 text-sm text-gray-400">Команды не найдены.</p>
+            )}
+            {teams.filter((t) => t.name.toLowerCase().includes(search.toLowerCase())).map((team) => {
               const isExpanded = expandedId === team.id
               const isEditing = editingTeam?.id === team.id
               const leadUser = allUsers.find((u) => u.id === team.teamLeadId)
