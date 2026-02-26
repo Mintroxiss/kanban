@@ -47,3 +47,8 @@ export async function assignTeamLead(teamId: string, userId: string): Promise<Te
   const { data } = await client.patch<Team>(`/teams/${teamId}/lead`, { userId })
   return data
 }
+
+export async function getAvailableUsers(teamId: string): Promise<User[]> {
+  const { data } = await client.get<User[]>(`/teams/${teamId}/available-users`)
+  return data
+}

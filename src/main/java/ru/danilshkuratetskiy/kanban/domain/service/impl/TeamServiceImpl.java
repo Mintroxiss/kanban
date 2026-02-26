@@ -27,6 +27,8 @@ import ru.danilshkuratetskiy.kanban.domain.service.exception.UserNotFoundExcepti
 import ru.danilshkuratetskiy.kanban.websocket.BoardEventService;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -226,5 +228,13 @@ public class TeamServiceImpl implements TeamService {
 
         team.setTeamLeadId(userId);
         return teamMapper.toDomain(teamRepository.save(team));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<UUID, String> getTeamNames(Set<UUID> teamIds) {
+        if (teamIds.isEmpty()) return Map.of();
+        return teamRepository.findAllById(teamIds).stream()
+                .collect(Collectors.toMap(TeamEntity::getId, TeamEntity::getName));
     }
 }

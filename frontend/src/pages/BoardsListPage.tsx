@@ -54,8 +54,14 @@ export default function BoardsListPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4">
         <p className="text-red-500">Не удалось загрузить доски.</p>
+        <button
+          onClick={() => { if (confirm('Выйти из аккаунта?')) logout() }}
+          className="text-sm text-gray-500 hover:text-gray-800 transition-colors"
+        >
+          Выйти
+        </button>
       </div>
     )
   }

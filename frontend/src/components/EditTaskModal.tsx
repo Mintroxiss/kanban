@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { createPortal } from 'react-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { updateTask } from '../api/tasks'
-import { getUsers } from '../api/users'
+import { getAssignableUsers } from '../api/epics'
 import type { Epic, Task } from '../types'
 
 interface Props {
@@ -29,8 +29,9 @@ export default function EditTaskModal({ task, boardId, epics, onClose }: Props) 
   const [deadline, setDeadline] = useState(task.deadline)
 
   const { data: users = [] } = useQuery({
-    queryKey: ['users'],
-    queryFn: getUsers,
+    queryKey: ['assignable-users', epicId],
+    queryFn: () => getAssignableUsers(epicId),
+    enabled: !!epicId,
   })
 
   const today = new Date().toISOString().split('T')[0]
@@ -119,7 +120,7 @@ export default function EditTaskModal({ task, boardId, epics, onClose }: Props) 
             <label className="text-sm font-medium text-gray-700">Статус</label>
             <select
               value={status}
-              onChange={(e) => setStatus(e.target.value)}
+              onChange={(e) => setStatus(e.target.value as Task['status'])}
               className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
             >
               {STATUSES.map((s) => (

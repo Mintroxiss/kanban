@@ -3,7 +3,7 @@ import { Link, Navigate, useLocation } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuthStore } from '../store/authStore'
 import { getDirections } from '../api/directions'
-import { getUsers, getUserById } from '../api/users'
+import { getUserById } from '../api/users'
 import {
   getTeams,
   getTeamById,
@@ -14,8 +14,9 @@ import {
   addUserToTeam,
   removeUserFromTeam,
   assignTeamLead,
+  getAvailableUsers,
 } from '../api/teams'
-import type { Team, User, UserRole } from '../types'
+import type { Team, UserRole } from '../types'
 
 const ROLE_LABELS: Record<UserRole, string> = {
   ADMIN: 'Администратор',
@@ -31,11 +32,9 @@ const ROLE_BADGE: Record<UserRole, string> = {
 
 function TeamMembersPanel({
   team,
-  allUsers,
   canManage,
 }: {
   team: Team
-  allUsers: User[]
   canManage: boolean
 }) {
   const queryClient = useQueryClient()
@@ -47,11 +46,17 @@ function TeamMembersPanel({
     queryFn: () => getTeamUsers(team.id),
   })
 
+  const { data: nonMembers = [] } = useQuery({
+    queryKey: ['available-users', team.id],
+    queryFn: () => getAvailableUsers(team.id),
+    enabled: canManage,
+  })
+
   const addMember = useMutation({
     mutationFn: (userId: string) => addUserToTeam(team.id, userId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['team-users', team.id] })
-      queryClient.invalidateQueries({ queryKey: ['users'] })
+      queryClient.invalidateQueries({ queryKey: ['available-users', team.id] })
       setAddUserId('')
     },
   })
@@ -60,7 +65,7 @@ function TeamMembersPanel({
     mutationFn: (userId: string) => removeUserFromTeam(team.id, userId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['team-users', team.id] })
-      queryClient.invalidateQueries({ queryKey: ['users'] })
+      queryClient.invalidateQueries({ queryKey: ['available-users', team.id] })
       queryClient.invalidateQueries({ queryKey: ['teams'] })
       setConfirmRemoveId(null)
     },
@@ -72,12 +77,8 @@ function TeamMembersPanel({
       queryClient.invalidateQueries({ queryKey: ['teams'] })
       queryClient.invalidateQueries({ queryKey: ['team', team.id] })
       queryClient.invalidateQueries({ queryKey: ['team-users', team.id] })
-      queryClient.invalidateQueries({ queryKey: ['users'] })
     },
   })
-
-  const memberIds = new Set(members.map((m) => m.id))
-  const nonMembers = allUsers.filter((u) => !memberIds.has(u.id) && u.role !== 'ADMIN' && !u.teamId)
 
   if (isLoading) {
     return <p className="px-5 py-3 text-sm text-gray-400">Загрузка...</p>
@@ -195,12 +196,6 @@ export default function TeamsPage() {
     queryFn: getDirections,
   })
 
-  const { data: allUsers = [] } = useQuery({
-    queryKey: ['users'],
-    queryFn: getUsers,
-    enabled: isAdmin || role === 'TEAM_LEAD',
-  })
-
   const { data: teams = [], isLoading: teamsLoading } = useQuery({
     queryKey: ['teams'],
     queryFn: getTeams,
@@ -289,7 +284,7 @@ export default function TeamsPage() {
                   Направление: {dirMap[myTeam.directionId] ?? myTeam.directionId}
                 </p>
               </div>
-              <TeamMembersPanel team={myTeam} allUsers={allUsers} canManage={true} />
+              <TeamMembersPanel team={myTeam} canManage={true} />
             </div>
           ) : null}
         </main>
@@ -384,7 +379,6 @@ export default function TeamsPage() {
             {teams.filter((t) => t.name.toLowerCase().includes(search.toLowerCase())).map((team) => {
               const isExpanded = expandedId === team.id
               const isEditing = editingTeam?.id === team.id
-              const leadUser = allUsers.find((u) => u.id === team.teamLeadId)
 
               return (
                 <div key={team.id}>
@@ -431,7 +425,7 @@ export default function TeamsPage() {
                         <p className="font-medium text-gray-800">{team.name}</p>
                         <p className="text-sm text-gray-400">
                           {dirMap[team.directionId] ?? '—'}
-                          {leadUser && <> · Тимлид: {leadUser.fullName}</>}
+                          {team.teamLeadName && <> · Тимлид: {team.teamLeadName}</>}
                         </p>
                       </div>
                       <div className="flex items-center gap-2">
@@ -478,7 +472,7 @@ export default function TeamsPage() {
                     </div>
                   )}
                   {isExpanded && (
-                    <TeamMembersPanel team={team} allUsers={allUsers} canManage={true} />
+                    <TeamMembersPanel team={team} canManage={true} />
                   )}
                 </div>
               )

@@ -83,6 +83,7 @@ export interface User {
   email: string
   role: UserRole
   teamId?: string
+  teamName?: string
 }
 
 export interface Team {
@@ -90,4 +91,5 @@ export interface Team {
   name: string
   directionId: string
   teamLeadId?: string
+  teamLeadName?: string
 }

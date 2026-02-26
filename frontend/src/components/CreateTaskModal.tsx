@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { createPortal } from 'react-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createTask } from '../api/tasks'
-import { getUsers } from '../api/users'
+import { getAssignableUsers } from '../api/epics'
 import type { Epic } from '../types'
 
 interface Props {
@@ -25,8 +25,6 @@ export default function CreateTaskModal({ boardId, columnId, epics, defaultEpicI
   const [description, setDescription] = useState('')
   const [epicId, setEpicId] = useState(defaultEpicId ?? epics[0]?.id ?? '')
 
-  const selectedEpic = epics.find((e) => e.id === epicId)
-
   function handleEpicChange(newEpicId: string) {
     setEpicId(newEpicId)
     setAssigneeId('')
@@ -35,14 +33,11 @@ export default function CreateTaskModal({ boardId, columnId, epics, defaultEpicI
   const [status, setStatus] = useState('TO_DO')
   const [assigneeId, setAssigneeId] = useState('')
 
-  const { data: users = [] } = useQuery({
-    queryKey: ['users'],
-    queryFn: getUsers,
+  const { data: assignableUsers = [] } = useQuery({
+    queryKey: ['assignable-users', epicId],
+    queryFn: () => getAssignableUsers(epicId),
+    enabled: !!epicId,
   })
-
-  const assignableUsers = users.filter(
-    (u) => u.role !== 'ADMIN' && u.teamId === selectedEpic?.teamId
-  )
 
   const mutation = useMutation({
     mutationFn: createTask,

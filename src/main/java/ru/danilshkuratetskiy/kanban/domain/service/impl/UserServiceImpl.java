@@ -23,6 +23,8 @@ import ru.danilshkuratetskiy.kanban.websocket.BoardEventService;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -166,6 +168,31 @@ public class UserServiceImpl implements UserService {
         }
 
         return updated;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<User> findByTeamId(UUID teamId) {
+        return userRepository.findByTeamId(teamId).stream()
+                .filter(u -> u.getRole() != UserRole.ADMIN)
+                .map(userMapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<User> findAvailableForTeam() {
+        return userRepository.findByTeamIdIsNullAndRoleNot(UserRole.ADMIN).stream()
+                .map(userMapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<UUID, String> findFullNamesByIds(Set<UUID> ids) {
+        if (ids.isEmpty()) return Map.of();
+        return userRepository.findAllById(ids).stream()
+                .collect(Collectors.toMap(UserEntity::getId, UserEntity::getFullName));
     }
 
     @Override

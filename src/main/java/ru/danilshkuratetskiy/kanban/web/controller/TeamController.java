@@ -25,7 +25,10 @@ import ru.danilshkuratetskiy.kanban.web.mapper.TeamMapper;
 import ru.danilshkuratetskiy.kanban.web.mapper.UserMapper;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/teams")
@@ -92,7 +95,25 @@ public class TeamController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Page<TeamDto>> getAllTeams(
             @PageableDefault(size = 20, sort = "name") Pageable pageable) {
-        return ResponseEntity.ok(teamService.findAll(pageable).map(teamMapper::toDto));
+        Page<Team> teams = teamService.findAll(pageable);
+        Set<UUID> leadIds = teams.getContent().stream()
+                .filter(t -> t.getTeamLeadId() != null)
+                .map(Team::getTeamLeadId)
+                .collect(Collectors.toSet());
+        Map<UUID, String> leadNames = userService.findFullNamesByIds(leadIds);
+        return ResponseEntity.ok(teams.map(t -> {
+            TeamDto dto = teamMapper.toDto(t);
+            if (t.getTeamLeadId() != null) dto.setTeamLeadName(leadNames.get(t.getTeamLeadId()));
+            return dto;
+        }));
+    }
+
+    @GetMapping("/{teamId}/available-users")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEAM_LEAD')")
+    public ResponseEntity<List<UserDto>> getAvailableUsers(@PathVariable UUID teamId) {
+        return ResponseEntity.ok(userService.findAvailableForTeam().stream()
+                .map(userMapper::toDto)
+                .toList());
     }
 
     @DeleteMapping("/{id}")

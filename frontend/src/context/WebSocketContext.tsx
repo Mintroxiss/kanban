@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useRef, useCallback, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useRef, useCallback, useState, type ReactNode } from 'react'
 import { Client } from '@stomp/stompjs'
 import type { StompSubscription } from '@stomp/stompjs'
 import SockJS from 'sockjs-client'
@@ -8,12 +8,14 @@ type Callback = (body: unknown) => void
 
 interface WebSocketContextValue {
   subscribe: (destination: string, callback: Callback) => () => void
+  isConnected: boolean
 }
 
 const WebSocketContext = createContext<WebSocketContextValue | null>(null)
 
 export function WebSocketProvider({ children }: { children: ReactNode }) {
   const token = useAuthStore((s) => s.token)
+  const [isConnected, setIsConnected] = useState(false)
 
   // destination → set of callbacks
   const callbacksRef = useRef<Map<string, Set<Callback>>>(new Map())
@@ -29,6 +31,7 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
       connectHeaders: { Authorization: `Bearer ${token}` },
       reconnectDelay: 5000,
       onConnect: () => {
+        setIsConnected(true)
         // Re-subscribe to every destination that has active callbacks.
         // This runs on every connect/reconnect, ensuring subscriptions survive
         // network drops.
@@ -43,7 +46,14 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
         }
       },
       onDisconnect: () => {
+        setIsConnected(false)
         stompSubsRef.current.clear()
+      },
+      onStompError: () => {
+        setIsConnected(false)
+      },
+      onWebSocketError: () => {
+        setIsConnected(false)
       },
     })
 
@@ -54,6 +64,7 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
       stompClient.deactivate()
       clientRef.current = null
       stompSubsRef.current.clear()
+      setIsConnected(false)
     }
   }, [token])
 
@@ -90,7 +101,7 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
   }, [])
 
   return (
-    <WebSocketContext.Provider value={{ subscribe }}>
+    <WebSocketContext.Provider value={{ subscribe, isConnected }}>
       {children}
     </WebSocketContext.Provider>
   )

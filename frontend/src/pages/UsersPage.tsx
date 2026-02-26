@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { getUsers } from '../api/users'
-import { getTeams } from '../api/teams'
 import type { UserRole } from '../types'
 
 const ROLE_LABELS: Record<UserRole, string> = {
@@ -24,13 +23,6 @@ export default function UsersPage() {
     queryKey: ['users'],
     queryFn: getUsers,
   })
-
-  const { data: teams = [] } = useQuery({
-    queryKey: ['teams'],
-    queryFn: getTeams,
-  })
-
-  const teamMap = Object.fromEntries(teams.map((t) => [t.id, t.name]))
 
   const filtered = search.trim()
     ? users.filter((u) => u.fullName.toLowerCase().includes(search.toLowerCase()))
@@ -68,13 +60,13 @@ export default function UsersPage() {
                 </div>
 
                 <div className="text-sm shrink-0">
-                  {user.teamId && teamMap[user.teamId] ? (
+                  {user.teamName ? (
                     <Link
                       to="/teams"
-                      state={{ search: teamMap[user.teamId] }}
+                      state={{ search: user.teamName }}
                       className="text-blue-600 hover:underline"
                     >
-                      {teamMap[user.teamId]}
+                      {user.teamName}
                     </Link>
                   ) : (
                     <span className="text-gray-400">—</span>

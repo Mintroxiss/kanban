@@ -57,8 +57,13 @@ public class ColumnController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<ColumnDto>> getAllColumns(
+    public ResponseEntity<?> getAllColumns(
+            @RequestParam(required = false) UUID boardId,
             @PageableDefault(size = 20) Pageable pageable) {
+        if (boardId != null) {
+            return ResponseEntity.ok(service.findByBoard(boardId).stream()
+                    .map(mapper::toDto).toList());
+        }
         return ResponseEntity.ok(service.findAll(pageable).map(mapper::toDto));
     }
 

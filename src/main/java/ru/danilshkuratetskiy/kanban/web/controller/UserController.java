@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import ru.danilshkuratetskiy.kanban.domain.model.User;
+import ru.danilshkuratetskiy.kanban.domain.service.TeamService;
 import ru.danilshkuratetskiy.kanban.domain.service.UserService;
 import ru.danilshkuratetskiy.kanban.web.dto.entities.TaskDto;
 import ru.danilshkuratetskiy.kanban.web.dto.entities.UserDto;
@@ -18,22 +19,28 @@ import ru.danilshkuratetskiy.kanban.web.mapper.TaskMapper;
 import ru.danilshkuratetskiy.kanban.web.mapper.UserMapper;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
 
     private final UserService userService;
+    private final TeamService teamService;
     private final UserMapper userMapper;
     private final TaskMapper taskMapper;
 
     public UserController(
             UserService userService,
+            TeamService teamService,
             UserMapper userMapper,
             TaskMapper taskMapper
     ) {
         this.userService = userService;
+        this.teamService = teamService;
         this.userMapper = userMapper;
         this.taskMapper = taskMapper;
     }
@@ -64,7 +71,17 @@ public class UserController {
     @PreAuthorize("hasAnyRole('ADMIN', 'TEAM_LEAD')")
     public ResponseEntity<Page<UserDto>> getAllUsers(
             @PageableDefault(size = 20, sort = "fullName") Pageable pageable) {
-        return ResponseEntity.ok(userService.findAll(pageable).map(userMapper::toDto));
+        Page<User> users = userService.findAll(pageable);
+        Set<UUID> teamIds = users.getContent().stream()
+                .filter(u -> u.getTeamId() != null)
+                .map(User::getTeamId)
+                .collect(Collectors.toSet());
+        Map<UUID, String> teamNames = teamService.getTeamNames(teamIds);
+        return ResponseEntity.ok(users.map(u -> {
+            UserDto dto = userMapper.toDto(u);
+            if (u.getTeamId() != null) dto.setTeamName(teamNames.get(u.getTeamId()));
+            return dto;
+        }));
     }
 
     @DeleteMapping("/{id}")

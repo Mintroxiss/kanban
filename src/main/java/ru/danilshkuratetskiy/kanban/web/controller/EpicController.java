@@ -12,11 +12,14 @@ import org.springframework.web.bind.annotation.*;
 import ru.danilshkuratetskiy.kanban.domain.model.Epic;
 import ru.danilshkuratetskiy.kanban.security.UserPrincipal;
 import ru.danilshkuratetskiy.kanban.domain.service.EpicService;
+import ru.danilshkuratetskiy.kanban.domain.service.UserService;
 import ru.danilshkuratetskiy.kanban.web.dto.entities.EpicDto;
 import ru.danilshkuratetskiy.kanban.web.dto.entities.TaskDto;
+import ru.danilshkuratetskiy.kanban.web.dto.entities.UserDto;
 import ru.danilshkuratetskiy.kanban.web.dto.requests.AssignTeamRequest;
 import ru.danilshkuratetskiy.kanban.web.mapper.EpicMapper;
 import ru.danilshkuratetskiy.kanban.web.mapper.TaskMapper;
+import ru.danilshkuratetskiy.kanban.web.mapper.UserMapper;
 import ru.danilshkuratetskiy.kanban.websocket.BoardEventService;
 
 import java.util.List;
@@ -29,12 +32,17 @@ public class EpicController {
     private final EpicService service;
     private final EpicMapper mapper;
     private final TaskMapper taskMapper;
+    private final UserService userService;
+    private final UserMapper userMapper;
     private final BoardEventService boardEventService;
 
-    public EpicController(EpicService service, EpicMapper mapper, TaskMapper taskMapper, BoardEventService boardEventService) {
+    public EpicController(EpicService service, EpicMapper mapper, TaskMapper taskMapper,
+                          UserService userService, UserMapper userMapper, BoardEventService boardEventService) {
         this.service = service;
         this.mapper = mapper;
         this.taskMapper = taskMapper;
+        this.userService = userService;
+        this.userMapper = userMapper;
         this.boardEventService = boardEventService;
     }
 
@@ -133,6 +141,17 @@ public class EpicController {
         EpicDto dto = mapper.toDto(epic);
         boardEventService.publishToBoard(dto.getBoardId(), "EPIC_RESTORED", dto);
         return ResponseEntity.ok(dto);
+    }
+
+    @GetMapping("/{epicId}/assignable-users")
+    public ResponseEntity<List<UserDto>> getAssignableUsers(@PathVariable UUID epicId) {
+        Epic epic = service.findById(epicId);
+        if (epic.getTeamId() == null) {
+            return ResponseEntity.ok(List.of());
+        }
+        return ResponseEntity.ok(userService.findByTeamId(epic.getTeamId()).stream()
+                .map(userMapper::toDto)
+                .toList());
     }
 
     @GetMapping("/{id}/tasks")

@@ -1,8 +1,10 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useAuthStore } from './store/authStore'
 import { useNotificationStore } from './store/notificationStore'
 import { useUserNotifications } from './hooks/useUserNotifications'
+import { useWebSocket } from './hooks/useWebSocket'
 import { WebSocketProvider } from './context/WebSocketContext'
 import LoginPage from './pages/LoginPage'
 import BoardsListPage from './pages/BoardsListPage'
@@ -12,11 +14,33 @@ import ArchivedEpicsPage from './pages/ArchivedEpicsPage'
 import UsersPage from './pages/UsersPage'
 import TeamsPage from './pages/TeamsPage'
 import DirectionsPage from './pages/DirectionsPage'
-import type { ReactNode } from 'react'
-
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 30_000 } },
 })
+
+function OfflineBanner() {
+  const { isConnected } = useWebSocket()
+  const token = useAuthStore((s) => s.token)
+  const wasConnectedRef = useRef(false)
+  const [show, setShow] = useState(false)
+
+  useEffect(() => {
+    if (isConnected) {
+      wasConnectedRef.current = true
+      setShow(false)
+    } else if (wasConnectedRef.current) {
+      setShow(true)
+    }
+  }, [isConnected])
+
+  if (!show || !token) return null
+
+  return (
+    <div className="fixed top-0 left-0 right-0 z-[100] bg-red-600 text-white text-sm text-center py-2 shadow-md">
+      Соединение с сервером потеряно. Данные могут быть устаревшими.
+    </div>
+  )
+}
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const token = useAuthStore((s) => s.token)
@@ -47,6 +71,7 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <WebSocketProvider>
       <BrowserRouter>
+        <OfflineBanner />
         <GlobalNotifications />
         <Routes>
           <Route path="/login" element={<LoginPage />} />

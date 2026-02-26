@@ -19,4 +19,5 @@ public class UserDto {
     private String email;
     @NotNull
     private UserRole role;
+    private String teamName;
 }

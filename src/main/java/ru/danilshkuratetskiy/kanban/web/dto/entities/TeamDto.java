@@ -14,4 +14,5 @@ public class TeamDto {
     @NotNull
     private UUID directionId;
     private UUID teamLeadId;
+    private String teamLeadName;
 }

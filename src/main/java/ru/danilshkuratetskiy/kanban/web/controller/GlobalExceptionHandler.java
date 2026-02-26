@@ -40,6 +40,12 @@ public class GlobalExceptionHandler {
         return Map.of("error", ex.getMessage());
     }
 
+    @ExceptionHandler(EmailAlreadyExistsException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public Map<String, String> handleEmailExists(EmailAlreadyExistsException ex) {
+        return Map.of("error", ex.getMessage());
+    }
+
     @ExceptionHandler(BusinessException.class)
     @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
     public Map<String, String> handleBusinessException(BusinessException ex) {

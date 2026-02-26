@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { isAxiosError } from 'axios'
 import { useNavigate } from 'react-router-dom'
 import { login, register } from '../api/auth'
 import { useAuthStore } from '../store/authStore'
@@ -35,8 +36,13 @@ export default function LoginPage() {
           : await register(email, password, fullName)
       loginStore(tokens)
       navigate('/boards')
-    } catch {
-      setError(mode === 'login' ? 'Неверная почта или пароль' : 'Ошибка регистрации. Возможно, такая почта уже используется.')
+    } catch (err) {
+      const status = isAxiosError(err) ? err.response?.status : undefined
+      if (mode === 'login') {
+        setError(status === 401 ? 'Неверная почта или пароль' : 'Сервер недоступен. Проверьте соединение и попробуйте позже.')
+      } else {
+        setError(status === 400 || status === 409 ? 'Ошибка регистрации. Возможно, такая почта уже используется.' : 'Сервер недоступен. Проверьте соединение и попробуйте позже.')
+      }
     } finally {
       setLoading(false)
     }

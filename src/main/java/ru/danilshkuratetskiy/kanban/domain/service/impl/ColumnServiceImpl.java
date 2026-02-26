@@ -79,6 +79,14 @@ public class ColumnServiceImpl implements ColumnService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<Column> findByBoard(UUID boardId) {
+        return repository.findAllByBoardIdOrderByOrder(boardId).stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     @Transactional
     public void delete(UUID id) {
         if (!repository.existsById(id)) {

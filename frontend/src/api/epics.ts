@@ -1,5 +1,5 @@
 import client from './client'
-import type { Epic, Task } from '../types'
+import type { Epic, Task, User } from '../types'
 
 export async function getEpicsByBoard(boardId: string): Promise<Epic[]> {
   const { data } = await client.get<Epic[]>(`/epics/board/${boardId}`)
@@ -38,6 +38,11 @@ export async function restoreEpic(id: string): Promise<Epic> {
 
 export async function getEpicTasks(epicId: string): Promise<Task[]> {
   const { data } = await client.get<Task[]>(`/epics/${epicId}/tasks`)
+  return data
+}
+
+export async function getAssignableUsers(epicId: string): Promise<User[]> {
+  const { data } = await client.get<User[]>(`/epics/${epicId}/assignable-users`)
   return data
 }
 

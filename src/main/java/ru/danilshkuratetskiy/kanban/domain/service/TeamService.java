@@ -6,6 +6,8 @@ import ru.danilshkuratetskiy.kanban.domain.model.Team;
 import ru.danilshkuratetskiy.kanban.domain.model.User;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 public interface TeamService extends Service<Team> {
@@ -21,4 +23,6 @@ public interface TeamService extends Service<Team> {
     void removeUserFromTeam(UUID teamId, UUID userId);
 
     Team assignTeamLead(UUID teamId, UUID userId);
+
+    Map<UUID, String> getTeamNames(Set<UUID> teamIds);
 }

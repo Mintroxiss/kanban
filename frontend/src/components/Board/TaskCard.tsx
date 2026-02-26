@@ -3,7 +3,7 @@ import { useMidnightTick } from '../../hooks/useMidnightTick'
 import { createPortal } from 'react-dom'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import type { Epic, Task } from '../../types'
 import { deleteTask, takeTask, releaseTask, changeStatus } from '../../api/tasks'
 import EditTaskModal from '../EditTaskModal'
@@ -55,6 +55,8 @@ export const TaskCardDisplay = forwardRef<HTMLDivElement, DisplayProps>(
   ) {
     const todayStr = useMidnightTick()
 
+    const queryClient = useQueryClient()
+
     const [open, setOpen] = useState(false)
     const [editing, setEditing] = useState(false)
     const [confirmDelete, setConfirmDelete] = useState(false)
@@ -75,7 +77,22 @@ export const TaskCardDisplay = forwardRef<HTMLDivElement, DisplayProps>(
     const statusMutation = useMutation({
       mutationFn: (newStatus: string) =>
         changeStatus(task.id, newStatus, task.columnId!),
-      onSuccess: () => setOpen(false),
+      onSuccess: (updated) => {
+        if (boardId) {
+          queryClient.setQueriesData<Record<string, Task[]>>(
+            { queryKey: ['grouped-tasks', boardId] },
+            (old) => {
+              if (!old) return old
+              const next: Record<string, Task[]> = {}
+              for (const [colId, tasks] of Object.entries(old)) {
+                next[colId] = tasks.map((t) => (t.id === updated.id ? updated : t))
+              }
+              return next
+            }
+          )
+        }
+        setOpen(false)
+      },
     })
 
     const releaseMutation = useMutation({

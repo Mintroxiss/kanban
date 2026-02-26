@@ -1,6 +1,12 @@
-import axios from 'axios'
+import axios, { isAxiosError } from 'axios'
 import { useAuthStore } from '../store/authStore'
 import { useNotificationStore } from '../store/notificationStore'
+
+/** True when the backend is unreachable — either direct network error or Vite proxy 502/503/504 */
+export function isServerUnavailable(error: unknown): boolean {
+  if (!isAxiosError(error)) return false
+  return !error.response || [502, 503, 504].includes(error.response.status)
+}
 
 const client = axios.create({ baseURL: '/api' })
 
@@ -13,11 +19,25 @@ client.interceptors.request.use((config) => {
 })
 
 let isRefreshing = false
+let _lastNetworkErrorAt = 0
 
 client.interceptors.response.use(
   (response) => response,
   async (error) => {
     const original = error.config
+
+    // Network error — backend unreachable (direct or via Vite proxy 502/503/504)
+    if (isServerUnavailable(error)) {
+      const now = Date.now()
+      if (now - _lastNetworkErrorAt > 10_000) {
+        _lastNetworkErrorAt = now
+        useNotificationStore.getState().addNotification(
+          'Сервер недоступен. Проверьте соединение.'
+        )
+      }
+      return Promise.reject(error)
+    }
+
     if (error.response?.status === 403) {
       const url: string = error.config?.url ?? ''
       if (url.startsWith('/tasks/')) {
