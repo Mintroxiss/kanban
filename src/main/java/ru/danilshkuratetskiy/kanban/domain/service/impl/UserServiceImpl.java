@@ -143,24 +143,28 @@ public class UserServiceImpl implements UserService {
         entity.setRole(role);
         User updated = userMapper.toDomain(userRepository.save(entity));
         String roleLabel = role == UserRole.TEAM_LEAD ? "Тимлид" : "Разработчик";
-        boardEventService.publishUserNotification(id, "Ваша роль изменена: " + roleLabel);
+        // Отправляем обновлённые role + teamId — фронтенд обновит authStore без перелогина
+        boardEventService.publishUserProfileUpdate(id, "Ваша роль изменена: " + roleLabel,
+                role.name(), entity.getTeamId());
 
         if (entity.getTeamId() != null) {
             teamRepository.findById(entity.getTeamId()).ifPresent((TeamEntity team) -> {
                 if (role == UserRole.TEAM_LEAD) {
-                    // Demote previous team lead if different person
+                    // Разжаловать предыдущего тимлида, если это другой человек
                     UUID prevLeadId = team.getTeamLeadId();
                     if (prevLeadId != null && !prevLeadId.equals(id)) {
                         userRepository.findById(prevLeadId).ifPresent(prevLead -> {
                             prevLead.setRole(UserRole.DEVELOPER);
                             userRepository.save(prevLead);
-                            boardEventService.publishUserNotification(prevLeadId, "Ваша роль изменена: Разработчик");
+                            boardEventService.publishUserProfileUpdate(prevLeadId,
+                                    "Ваша роль изменена: Разработчик",
+                                    UserRole.DEVELOPER.name(), entity.getTeamId());
                         });
                     }
                     team.setTeamLeadId(id);
                     teamRepository.save(team);
                 } else if (role == UserRole.DEVELOPER && id.equals(team.getTeamLeadId())) {
-                    // Remove as team lead when demoted
+                    // Снять с должности тимлида при понижении до разработчика
                     team.setTeamLeadId(null);
                     teamRepository.save(team);
                 }

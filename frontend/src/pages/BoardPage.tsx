@@ -268,8 +268,11 @@ export default function BoardPage() {
             next[colId] = tasks.filter((t) => t.id !== task.id)
           }
           if (type !== 'TASK_DELETED') {
-            const colId = task.columnId ?? '__unassigned__'
-            next[colId] = [...(next[colId] ?? []), task]
+            // Добавляем задачу только если она принадлежит текущему эпику (или показаны все эпики)
+            if (!selectedEpicId || task.epicId === selectedEpicId) {
+              const colId = task.columnId ?? '__unassigned__'
+              next[colId] = [...(next[colId] ?? []), task]
+            }
           }
           return next
         }

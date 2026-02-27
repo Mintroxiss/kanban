@@ -154,6 +154,11 @@ public class EpicController {
                 .toList());
     }
 
+    @GetMapping("/team/{teamId}/board-ids")
+    public ResponseEntity<List<UUID>> getBoardIdsByTeam(@PathVariable UUID teamId) {
+        return ResponseEntity.ok(service.findActiveBoardIdsByTeam(teamId));
+    }
+
     @GetMapping("/{id}/tasks")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<TaskDto>> getEpicTasks(@PathVariable UUID id) {

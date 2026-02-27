@@ -1,10 +1,12 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
+import axios from 'axios'
 import { useAuthStore } from './store/authStore'
 import { useNotificationStore } from './store/notificationStore'
 import { useUserNotifications } from './hooks/useUserNotifications'
 import { useWebSocket } from './hooks/useWebSocket'
+import type { AuthTokens } from './types'
 import { WebSocketProvider } from './context/WebSocketContext'
 import LoginPage from './pages/LoginPage'
 import BoardsListPage from './pages/BoardsListPage'
@@ -50,6 +52,18 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
 
 function GlobalNotifications() {
   useUserNotifications()
+
+  // При старте подтягиваем актуальные role и teamId из БД через refresh —
+  // это исправляет устаревшую роль в localStorage без перелогина
+  useEffect(() => {
+    const { refreshToken } = useAuthStore.getState()
+    if (!refreshToken) return
+    axios
+      .post<AuthTokens>('/api/auth/refresh', { refreshToken })
+      .then(({ data }) => useAuthStore.getState().login(data))
+      .catch(() => {})
+  }, [])
+
   const notifications = useNotificationStore((s) => s.notifications)
 
   return (

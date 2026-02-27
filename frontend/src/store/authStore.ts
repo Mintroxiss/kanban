@@ -11,6 +11,7 @@ interface AuthState {
   login: (tokens: AuthTokens) => void
   logout: () => void
   setToken: (token: string) => void
+  updateProfile: (profile: { role?: UserRole; teamId?: string | null }) => void
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -31,6 +32,11 @@ export const useAuthStore = create<AuthState>()(
         }),
       logout: () => set({ token: null, refreshToken: null, role: null, userId: null, teamId: null }),
       setToken: (token) => set({ token }),
+      updateProfile: (profile) =>
+        set((s) => ({
+          role: 'role' in profile ? (profile.role ?? s.role) : s.role,
+          teamId: 'teamId' in profile ? profile.teamId : s.teamId,
+        })),
     }),
     { name: 'kanban-auth' }
   )

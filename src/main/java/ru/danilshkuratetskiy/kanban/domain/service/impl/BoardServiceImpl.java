@@ -57,6 +57,7 @@ public class BoardServiceImpl implements BoardService {
         BoardEntity entity = boardMapper.toEntity(board);
         BoardEntity saved = boardRepository.save(entity);
 
+        // Создать три колонки по умолчанию для новой доски
         String[] defaultTitles = {"К выполнению", "В работе", "Готово"};
         for (int i = 0; i < defaultTitles.length; i++) {
             ColumnEntity col = new ColumnEntity();
@@ -108,6 +109,7 @@ public class BoardServiceImpl implements BoardService {
         if (!boardRepository.existsById(id)) {
             throw new BoardNotFoundException("Board not found: " + id);
         }
+        // Каскадное удаление: задачи → эпики → колонки → доска
         List<UUID> epicIds = epicRepository.findAllByBoardId(id).stream()
                 .map(EpicEntity::getId).toList();
         if (!epicIds.isEmpty()) {
@@ -148,6 +150,7 @@ public class BoardServiceImpl implements BoardService {
         List<ColumnEntity> columns = columnRepository.findAllByBoardIdOrderByOrder(boardId);
         List<UUID> columnIds = columns.stream().map(ColumnEntity::getId).toList();
 
+        // Если указан эпик — фильтруем по нему; иначе показываем задачи только активных эпиков
         List<TaskEntity> tasks = (epicId != null)
                 ? taskRepository.findAllByColumnIdInAndEpicId(columnIds, epicId)
                 : taskRepository.findAllByColumnIdInAndEpicArchivedFalse(columnIds);

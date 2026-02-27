@@ -17,6 +17,7 @@ public interface TaskRepository extends JpaRepository<TaskEntity, UUID> {
 
     List<TaskEntity> findAllByColumnId(UUID columnId);
 
+    // Только задачи активных (не заархивированных) эпиков — для основного представления доски
     @Query("""
                 select t from TaskEntity t
                 join EpicEntity e on t.epicId = e.id
@@ -37,6 +38,7 @@ public interface TaskRepository extends JpaRepository<TaskEntity, UUID> {
             """)
     List<TaskEntity> findByTeamId(UUID teamId);
 
+    // JPQL bulk-delete задач при каскадном удалении эпиков или доски
     @Modifying
     @Query("delete from TaskEntity t where t.epicId in :epicIds")
     void deleteAllByEpicIdIn(List<UUID> epicIds);

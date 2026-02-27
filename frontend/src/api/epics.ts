@@ -57,3 +57,8 @@ export async function updateEpic(
 export async function deleteEpic(id: string): Promise<void> {
   await client.delete(`/epics/${id}`)
 }
+
+export async function getMyTeamBoardIds(teamId: string): Promise<string[]> {
+  const { data } = await client.get<string[]>(`/epics/team/${teamId}/board-ids`)
+  return data
+}

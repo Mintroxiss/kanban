@@ -175,4 +175,10 @@ public class EpicServiceImpl implements EpicService {
                 .map(taskMapper::toDomain)
                 .collect(Collectors.toList());
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<UUID> findActiveBoardIdsByTeam(UUID teamId) {
+        return epicRepository.findActiveBoardIdsByTeamId(teamId);
+    }
 }

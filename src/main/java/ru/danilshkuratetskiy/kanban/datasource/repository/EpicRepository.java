@@ -20,9 +20,15 @@ public interface EpicRepository extends JpaRepository<EpicEntity, UUID> {
 
     List<EpicEntity> findAllByBoardIdAndArchivedTrue(UUID boardId);
 
+    // Возвращает подмножество ID, у которых archived = true — используется при удалении колонки
     @Query("select e.id from EpicEntity e where e.id in :ids and e.archived = true")
     Set<UUID> findArchivedIdsByIdIn(@Param("ids") List<UUID> ids);
 
+    // Уникальные boardId активных эпиков команды — для сортировки списка досок
+    @Query("select distinct e.boardId from EpicEntity e where e.teamId = :teamId and e.archived = false")
+    List<UUID> findActiveBoardIdsByTeamId(@Param("teamId") UUID teamId);
+
+    // JPQL bulk-delete: обходит @PreRemove / каскады JPA для скорости
     @Modifying
     @Query("delete from EpicEntity e where e.boardId = :boardId")
     void deleteAllByBoardId(UUID boardId);

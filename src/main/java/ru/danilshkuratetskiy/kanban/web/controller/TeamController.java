@@ -85,7 +85,6 @@ public class TeamController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'TEAM_LEAD')")
     public ResponseEntity<TeamDto> getTeamById(@PathVariable UUID id) {
         Team team = teamService.findById(id);
         return ResponseEntity.ok(teamMapper.toDto(team));

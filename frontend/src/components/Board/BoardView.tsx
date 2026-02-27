@@ -2,6 +2,7 @@ import { useQueryClient, useMutation } from '@tanstack/react-query'
 import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core'
 import { useState } from 'react'
+import { useMidnightTick } from '../../hooks/useMidnightTick'
 import type { Column, Epic, Task } from '../../types'
 import KanbanColumn from './KanbanColumn'
 import { TaskCardDisplay } from './TaskCard'
@@ -20,6 +21,14 @@ interface Props {
   role?: string
   userId?: string
   epicTeamNameMap?: Record<string, string>
+}
+
+function daysLeft(deadline: string, todayStr: string): number {
+  const [ty, tm, td] = todayStr.split('-').map(Number)
+  const [dy, dm, dd] = deadline.split('T')[0].split('-').map(Number)
+  return Math.round(
+    (new Date(dy, dm - 1, dd).getTime() - new Date(ty, tm - 1, td).getTime()) / 86_400_000
+  )
 }
 
 function AddColumnPanel({ boardId, nextOrder }: { boardId: string; nextOrder: number }) {
@@ -98,6 +107,7 @@ export default function BoardView({
   epicTeamNameMap,
 }: Props) {
   const queryClient = useQueryClient()
+  const todayStr = useMidnightTick()
   const [activeTask, setActiveTask] = useState<Task | null>(null)
 
   const sensors = useSensors(
@@ -143,13 +153,13 @@ export default function BoardView({
     const task = findTask(taskId)
     if (!task) return
 
-    // Optimistic update
+    // Оптимистичное обновление кэша: перемещаем задачу локально до ответа сервера
     const queryKey = ['grouped-tasks', boardId, selectedEpicId || undefined]
     const previous = queryClient.getQueryData<Record<string, Task[]>>(queryKey)
 
     queryClient.setQueryData<Record<string, Task[]>>(queryKey, (old = {}) => {
       const next = { ...old }
-      next[sourceColumnId] = next[sourceColumnId].filter((t) => t.id !== taskId)
+      next[sourceColumnId] = (next[sourceColumnId] ?? []).filter((t) => t.id !== taskId)
       next[targetColumnId] = [
         ...(next[targetColumnId] ?? []),
         { ...task, columnId: targetColumnId },
@@ -181,7 +191,11 @@ export default function BoardView({
           <KanbanColumn
             key={col.id}
             column={col}
-            tasks={groupedTasks[col.id] ?? []}
+            tasks={[...(groupedTasks[col.id] ?? [])].sort((a, b) => {
+              const da = a.deadline ? daysLeft(a.deadline, todayStr) : Infinity
+              const db = b.deadline ? daysLeft(b.deadline, todayStr) : Infinity
+              return da - db
+            })}
             boardId={boardId}
             epics={manageableEpics}
             defaultEpicId={selectedEpicId && manageableEpics.some(e => e.id === selectedEpicId)

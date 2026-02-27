@@ -105,6 +105,7 @@ export const TaskCardDisplay = forwardRef<HTMLDivElement, DisplayProps>(
       releaseMutation.reset()
       setConfirmTake(false)
       setMenuOpen(false)
+      // Намеренно не добавляем мутации в deps: нужно сбрасывать состояние только при смене исполнителя
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [task.assigneeId])
 
@@ -124,7 +125,7 @@ export const TaskCardDisplay = forwardRef<HTMLDivElement, DisplayProps>(
             ${canDrag ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'}
             ${isMyTask ? 'bg-blue-50 border-blue-200' : 'bg-white border-gray-200'}`}
         >
-          {/* Title row with optional menu */}
+          {/* Заголовок задачи и кнопка меню (отпустить) */}
           <div className="flex items-start gap-1 mb-2">
             <p className="font-medium text-sm text-gray-800 flex-1 min-w-0">{task.title}</p>
 

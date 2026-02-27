@@ -21,4 +21,6 @@ public interface EpicService extends Service<Epic> {
     List<Epic> findArchivedByBoard(UUID boardId);
 
     List<Task> getEpicTasks(UUID epicId);
+
+    List<UUID> findActiveBoardIdsByTeam(UUID teamId);
 }

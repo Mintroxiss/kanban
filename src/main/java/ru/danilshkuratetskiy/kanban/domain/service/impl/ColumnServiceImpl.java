@@ -97,11 +97,14 @@ public class ColumnServiceImpl implements ColumnService {
             Set<UUID> epicIds = all.stream()
                     .map(TaskEntity::getEpicId)
                     .collect(Collectors.toSet());
+            // Определяем, какие из эпиков в колонке заархивированы
             Set<UUID> archivedIds = epicRepository.findArchivedIdsByIdIn(new ArrayList<>(epicIds));
+            // Блокируем удаление только если есть задачи активных эпиков
             boolean hasActiveTasks = all.stream().anyMatch(t -> !archivedIds.contains(t.getEpicId()));
             if (hasActiveTasks) {
                 throw new BusinessException("Нельзя удалить столбец: сначала удалите все задачи из него");
             }
+            // Задачи архивных эпиков открепляем от колонки (columnId = null), а не удаляем
             all.forEach(t -> t.setColumnId(null));
             taskRepository.saveAll(all);
         }

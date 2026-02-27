@@ -2,7 +2,7 @@ import axios, { isAxiosError } from 'axios'
 import { useAuthStore } from '../store/authStore'
 import { useNotificationStore } from '../store/notificationStore'
 
-/** True when the backend is unreachable — either direct network error or Vite proxy 502/503/504 */
+/** Возвращает true, если бэкенд недоступен: сетевая ошибка или ответ 502/503/504 от прокси Vite */
 export function isServerUnavailable(error: unknown): boolean {
   if (!isAxiosError(error)) return false
   return !error.response || [502, 503, 504].includes(error.response.status)
@@ -26,7 +26,7 @@ client.interceptors.response.use(
   async (error) => {
     const original = error.config
 
-    // Network error — backend unreachable (direct or via Vite proxy 502/503/504)
+    // Бэкенд недоступен: показываем уведомление не чаще раза в 10 секунд
     if (isServerUnavailable(error)) {
       const now = Date.now()
       if (now - _lastNetworkErrorAt > 10_000) {
@@ -47,13 +47,15 @@ client.interceptors.response.use(
       }
     }
 
+    // 401: пробуем обновить токен через refresh endpoint; при неудаче — разлогиниваем
     if (error.response?.status === 401 && !original._retry && !isRefreshing) {
       original._retry = true
       isRefreshing = true
       try {
         const refreshToken = useAuthStore.getState().refreshToken
         const { data } = await axios.post('/api/auth/refresh', { refreshToken })
-        useAuthStore.getState().setToken(data.token)
+        // login() обновляет токен, роль и teamId из свежего ответа бэкенда
+        useAuthStore.getState().login(data)
         original.headers.Authorization = `Bearer ${data.token}`
         return client(original)
       } catch {

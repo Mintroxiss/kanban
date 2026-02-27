@@ -118,7 +118,7 @@ public class TeamServiceImpl implements TeamService {
         TeamEntity team = teamRepository.findById(id)
                 .orElseThrow(() -> new TeamNotFoundException("Team not found: " + id));
 
-        // Detach all members; demote the team lead to developer
+        // Открепить всех участников от команды; тимлида разжаловать до разработчика
         List<UserEntity> members = userRepository.findByTeamId(id);
         for (UserEntity member : members) {
             if (member.getId().equals(team.getTeamLeadId())) {
@@ -127,15 +127,20 @@ public class TeamServiceImpl implements TeamService {
             member.setTeamId(null);
         }
         userRepository.saveAll(members);
+        // Уведомить каждого участника об обновлении профиля (teamId = null)
+        for (UserEntity member : members) {
+            boardEventService.publishUserProfileUpdate(member.getId(),
+                    "Ваша команда была удалена", member.getRole().name(), null);
+        }
 
-        // Detach epics assigned to this team
+        // Открепить эпики, привязанные к этой команде
         List<EpicEntity> epics = epicRepository.findByTeamId(id);
         for (EpicEntity epic : epics) {
             epic.setTeamId(null);
         }
         epicRepository.saveAll(epics);
 
-        // Clear team_lead_id FK before deletion
+        // Обнулить team_lead_id перед удалением — иначе циклический внешний ключ заблокирует DELETE
         team.setTeamLeadId(null);
         teamRepository.save(team);
 
@@ -177,7 +182,10 @@ public class TeamServiceImpl implements TeamService {
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found: " + userId));
         user.setTeamId(teamId);
-        return userMapper.toDomain(userRepository.save(user));
+        User saved = userMapper.toDomain(userRepository.save(user));
+        boardEventService.publishUserProfileUpdate(userId, "Вас добавили в команду",
+                user.getRole().name(), teamId);
+        return saved;
     }
 
     @Override
@@ -196,6 +204,8 @@ public class TeamServiceImpl implements TeamService {
             team.setTeamLeadId(null);
             teamRepository.save(team);
         }
+        boardEventService.publishUserProfileUpdate(userId, "Вас удалили из команды",
+                user.getRole().name(), null);
     }
 
     @Override
@@ -209,22 +219,25 @@ public class TeamServiceImpl implements TeamService {
             throw new BusinessException("User is not a member of this team");
         }
 
-        // Demote previous team lead only if they are still a member of this team
+        // Разжаловать предыдущего тимлида только если он всё ещё состоит в этой команде
         UUID prevLeadId = team.getTeamLeadId();
         if (prevLeadId != null && !prevLeadId.equals(userId)) {
             userRepository.findById(prevLeadId).ifPresent(prevLead -> {
                 if (teamId.equals(prevLead.getTeamId())) {
                     prevLead.setRole(UserRole.DEVELOPER);
                     userRepository.save(prevLead);
-                    boardEventService.publishUserNotification(prevLeadId, "Ваша роль изменена: Разработчик");
+                    boardEventService.publishUserProfileUpdate(prevLeadId,
+                            "Ваша роль изменена: Разработчик",
+                            UserRole.DEVELOPER.name(), teamId);
                 }
             });
         }
 
-        // Promote new team lead
+        // Назначить нового тимлида
         newLead.setRole(UserRole.TEAM_LEAD);
         userRepository.save(newLead);
-        boardEventService.publishUserNotification(userId, "Ваша роль изменена: Тимлид");
+        boardEventService.publishUserProfileUpdate(userId, "Ваша роль изменена: Тимлид",
+                UserRole.TEAM_LEAD.name(), teamId);
 
         team.setTeamLeadId(userId);
         return teamMapper.toDomain(teamRepository.save(team));

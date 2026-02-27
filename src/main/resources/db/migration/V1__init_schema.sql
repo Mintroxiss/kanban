@@ -38,8 +38,9 @@ ALTER TABLE teams
 -- =========================
 CREATE TABLE boards (
     id           UUID         PRIMARY KEY,
-    name         VARCHAR(255) NOT NULL UNIQUE,
-    direction_id UUID         NOT NULL REFERENCES directions(id)
+    name         VARCHAR(255) NOT NULL,
+    direction_id UUID         NOT NULL REFERENCES directions(id),
+    archived     BOOLEAN      NOT NULL DEFAULT FALSE
 );
 
 -- =========================
@@ -63,6 +64,7 @@ CREATE TABLE epics (
     description VARCHAR(2000),
     board_id    UUID         NOT NULL REFERENCES boards(id),
     team_id     UUID         REFERENCES teams(id),
+    archived    BOOLEAN      NOT NULL DEFAULT FALSE,
 
     CONSTRAINT uq_board_epic_title UNIQUE (board_id, title)
 );
@@ -71,14 +73,15 @@ CREATE TABLE epics (
 -- TASKS
 -- =========================
 CREATE TABLE tasks (
-    id          UUID         PRIMARY KEY,
-    title       VARCHAR(255) NOT NULL,
-    description TEXT,
-    status      VARCHAR(50)  NOT NULL,
-    created_at  TIMESTAMP    NOT NULL,
-    updated_at  TIMESTAMP    NOT NULL,
-    deadline    DATE         NOT NULL,
-    assignee_id UUID         REFERENCES users(id),
-    column_id   UUID         REFERENCES columns(id),
-    epic_id     UUID         NOT NULL REFERENCES epics(id)
+    id               UUID         PRIMARY KEY,
+    title            VARCHAR(255) NOT NULL,
+    description      TEXT,
+    status           VARCHAR(50)  NOT NULL,
+    created_at       TIMESTAMP    NOT NULL,
+    updated_at       TIMESTAMP    NOT NULL,
+    deadline         DATE         NOT NULL,
+    assignee_id      UUID         REFERENCES users(id),
+    last_assignee_id UUID         REFERENCES users(id),
+    column_id        UUID         REFERENCES columns(id),
+    epic_id          UUID         NOT NULL REFERENCES epics(id)
 );

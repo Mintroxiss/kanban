@@ -17,9 +17,9 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
   const token = useAuthStore((s) => s.token)
   const [isConnected, setIsConnected] = useState(false)
 
-  // destination → set of callbacks
+  // маршрут (destination) → набор колбэков-обработчиков
   const callbacksRef = useRef<Map<string, Set<Callback>>>(new Map())
-  // destination → active STOMP subscription
+  // маршрут (destination) → активная STOMP-подписка
   const stompSubsRef = useRef<Map<string, StompSubscription>>(new Map())
   const clientRef = useRef<Client | null>(null)
 
@@ -32,9 +32,9 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
       reconnectDelay: 5000,
       onConnect: () => {
         setIsConnected(true)
-        // Re-subscribe to every destination that has active callbacks.
-        // This runs on every connect/reconnect, ensuring subscriptions survive
-        // network drops.
+        // Переподписываемся на все маршруты с активными колбэками.
+        // Выполняется при каждом подключении / переподключении,
+        // чтобы подписки восстанавливались после разрыва сети.
         stompSubsRef.current.clear()
         for (const [dest, callbacks] of callbacksRef.current) {
           if (callbacks.size === 0) continue
@@ -69,13 +69,13 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
   }, [token])
 
   const subscribe = useCallback((destination: string, callback: Callback): (() => void) => {
-    // Register callback
+    // Регистрируем колбэк для указанного маршрута
     if (!callbacksRef.current.has(destination)) {
       callbacksRef.current.set(destination, new Set())
     }
     callbacksRef.current.get(destination)!.add(callback)
 
-    // If already connected and no STOMP sub yet for this destination, create one
+    // Если уже подключены и STOMP-подписки на этот маршрут ещё нет — создаём её немедленно
     const client = clientRef.current
     if (client?.connected && !stompSubsRef.current.has(destination)) {
       const sub = client.subscribe(destination, (frame) => {

@@ -258,7 +258,7 @@ export default function TeamsPage() {
 
   if (role === 'DEVELOPER') return <Navigate to="/boards" replace />
 
-  // ── TEAM_LEAD view ──────────────────────────────────────────────────────────
+  // ── Представление тимлида: только его собственная команда ──────────────────
   if (role === 'TEAM_LEAD') {
     const loading = !myUser || (!!myUser.teamId && myTeamLoading)
     return (
@@ -292,7 +292,7 @@ export default function TeamsPage() {
     )
   }
 
-  // ── ADMIN view ──────────────────────────────────────────────────────────────
+  // ── Представление администратора: все команды с управлением ─────────────────
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b px-6 py-4 flex items-center gap-4">

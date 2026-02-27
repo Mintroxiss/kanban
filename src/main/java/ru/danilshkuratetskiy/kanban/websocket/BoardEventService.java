@@ -31,9 +31,18 @@ public class BoardEventService {
         messaging.convertAndSend("/topic/boards", new BoardEvent(type, payload));
     }
 
+    /** Простое текстовое уведомление без изменения профиля */
     public void publishUserNotification(UUID userId, String message) {
-        messaging.convertAndSend("/topic/user/" + userId, new UserNotification(message));
+        messaging.convertAndSend("/topic/user/" + userId,
+                new UserNotification("MESSAGE", message, null, null));
     }
 
-    public record UserNotification(String message) {}
+    /** Уведомление об изменении роли/команды — фронтенд обновит authStore без перелогина */
+    public void publishUserProfileUpdate(UUID userId, String message, String role, UUID teamId) {
+        messaging.convertAndSend("/topic/user/" + userId,
+                new UserNotification("PROFILE_UPDATE", message, role,
+                        teamId != null ? teamId.toString() : null));
+    }
+
+    public record UserNotification(String type, String message, String role, String teamId) {}
 }

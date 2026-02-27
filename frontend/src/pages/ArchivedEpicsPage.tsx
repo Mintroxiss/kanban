@@ -119,8 +119,8 @@ function EpicCard({
     columns.map((c: Column) => [c.id, c.title])
   )
 
-  // Задачи без актуальной колонки (колонка была удалена)
-  const orphaned = tasks.filter((t) => !t.columnId)
+  // Задачи без актуальной колонки: columnId null ИЛИ колонка уже удалена (stale cache)
+  const orphaned = tasks.filter((t) => !t.columnId || !columnMap[t.columnId])
 
   const restoreMutation = useMutation({
     mutationFn: () => restoreEpic(epic.id),
