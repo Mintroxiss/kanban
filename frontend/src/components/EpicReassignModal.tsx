@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import {
-  DndContext, DragOverlay, PointerSensor, useSensor, useSensors,
+  DndContext, PointerSensor, useSensor, useSensors,
   useDraggable, useDroppable,
 } from '@dnd-kit/core'
-import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core'
+import type { DragEndEvent } from '@dnd-kit/core'
 import type { Column, Task } from '../types'
 
 interface Props {
@@ -19,13 +19,17 @@ function DraggableTaskChip({ task }: { task: Task }) {
   return (
     <div
       ref={setNodeRef}
-      style={transform ? { transform: `translate(${transform.x}px, ${transform.y}px)` } : undefined}
+      style={{
+        transform: transform ? `translate(${transform.x}px, ${transform.y}px)` : undefined,
+        zIndex: isDragging ? 50 : undefined,
+        position: isDragging ? 'relative' : undefined,
+      }}
       {...listeners}
       {...attributes}
-      className={`backdrop-blur-md bg-white/[0.14] border rounded-xl px-3 py-1.5 text-sm text-white/80 cursor-grab select-none transition-all ${
+      className={`backdrop-blur-md border rounded-xl px-3 py-1.5 text-sm cursor-grab select-none transition-colors ${
         isDragging
-          ? 'opacity-40 border-indigo-400/60 shadow-lg'
-          : 'border-white/[0.20] hover:border-indigo-400/40 hover:bg-white/[0.19]'
+          ? 'bg-indigo-500/25 border-indigo-400/60 text-white shadow-[0_8px_24px_rgba(99,102,241,0.35)]'
+          : 'bg-white/[0.14] text-white/80 border-white/[0.20] hover:border-indigo-400/40 hover:bg-white/[0.19]'
       }`}
     >
       {task.title}
@@ -64,18 +68,13 @@ export default function EpicReassignModal({ epicTitle, orphanedTasks, columns, o
   const [placements, setPlacements] = useState<Record<string, string | null>>(
     Object.fromEntries(orphanedTasks.map((t) => [t.id, null]))
   )
-  const [activeTask, setActiveTask] = useState<Task | null>(null)
   const [confirming, setConfirming] = useState(false)
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
   const remainingCount = Object.values(placements).filter((v) => v === null).length
   const allAssigned = remainingCount === 0
 
-  function handleDragStart(e: DragStartEvent) {
-    setActiveTask(orphanedTasks.find((t) => t.id === String(e.active.id)) ?? null)
-  }
   function handleDragEnd(e: DragEndEvent) {
-    setActiveTask(null)
     if (!e.over) return
     const taskId = String(e.active.id)
     const overId = String(e.over.id)
@@ -111,7 +110,7 @@ export default function EpicReassignModal({ epicTitle, orphanedTasks, columns, o
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto px-6 py-4">
-          <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+          <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
             <div className="flex flex-col gap-4">
               <DropZone id="__orphaned__" label="Без колонки" tasks={stillOrphaned} variant="orphaned" />
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
@@ -126,13 +125,6 @@ export default function EpicReassignModal({ epicTitle, orphanedTasks, columns, o
                 ))}
               </div>
             </div>
-            <DragOverlay>
-              {activeTask ? (
-                <div className="backdrop-blur-xl bg-white/[0.15] border border-indigo-400/50 rounded-xl px-3 py-1.5 text-sm text-white shadow-xl cursor-grabbing">
-                  {activeTask.title}
-                </div>
-              ) : null}
-            </DragOverlay>
           </DndContext>
         </div>
 

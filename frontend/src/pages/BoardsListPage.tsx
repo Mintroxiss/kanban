@@ -21,6 +21,7 @@ export default function BoardsListPage() {
   const [confirmAction, setConfirmAction] = useState<{ type: 'archive' | 'delete'; board: Board } | null>(null)
   const [nameFilter, setNameFilter] = useState('')
   const [dirFilter, setDirFilter] = useState('')
+  const [dirDropdownOpen, setDirDropdownOpen] = useState(false)
   const queryClient = useQueryClient()
   const { subscribe } = useWebSocket()
 
@@ -130,14 +131,37 @@ export default function BoardsListPage() {
               onChange={(e) => setNameFilter(e.target.value)}
               className="flex-1 text-sm bg-white/[0.19] border border-white/[0.18] rounded-xl px-3 py-1.5 text-white/85 placeholder:text-white/30 focus:outline-none focus:border-indigo-400/50 transition-all"
             />
-            <select
-              value={dirFilter}
-              onChange={(e) => setDirFilter(e.target.value)}
-              className="text-sm bg-white/[0.19] border border-white/[0.18] rounded-xl px-3 py-1.5 text-white/85 focus:outline-none focus:border-indigo-400/50 transition-all"
-            >
-              <option value="">Все направления</option>
-              {directions.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
-            </select>
+            <div className="relative">
+              <button
+                onClick={() => setDirDropdownOpen((v) => !v)}
+                className="text-sm backdrop-blur-md bg-white/[0.19] border border-white/[0.18] rounded-xl px-3 py-1.5 text-white/85 hover:bg-white/[0.14] hover:border-indigo-400/50 focus:outline-none transition-all flex items-center gap-2 whitespace-nowrap"
+              >
+                <span>{dirFilter ? (directions.find((d) => d.id === dirFilter)?.name ?? 'Все направления') : 'Все направления'}</span>
+                <span className="text-white/30 text-xs">▾</span>
+              </button>
+              {dirDropdownOpen && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setDirDropdownOpen(false)} />
+                  <div className="absolute right-0 top-full mt-1 z-20 backdrop-blur-xl bg-white/[0.14] border border-white/[0.22] rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.4)] py-1 min-w-full w-max">
+                    <button
+                      onClick={() => { setDirFilter(''); setDirDropdownOpen(false) }}
+                      className={`w-full text-left text-sm px-3 py-2 transition-colors ${!dirFilter ? 'text-indigo-300 font-medium bg-indigo-500/10' : 'text-white/70 hover:bg-white/[0.11] hover:text-white/90'}`}
+                    >
+                      Все направления
+                    </button>
+                    {directions.map((d) => (
+                      <button
+                        key={d.id}
+                        onClick={() => { setDirFilter(d.id); setDirDropdownOpen(false) }}
+                        className={`w-full text-left text-sm px-3 py-2 transition-colors ${dirFilter === d.id ? 'text-indigo-300 font-medium bg-indigo-500/10' : 'text-white/70 hover:bg-white/[0.11] hover:text-white/90'}`}
+                      >
+                        {d.name}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         )}
 

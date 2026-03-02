@@ -418,11 +418,11 @@ export default function BoardPage() {
               to={`/boards/${boardId}/epics/archived`}
               className="text-sm text-white/40 hover:text-white/70 transition-colors"
             >
-              Архив эпиков →
+              Архив эпиков
             </Link>
             <button
               onClick={() => setShowCreateEpic(true)}
-              className="text-sm bg-violet-500/70 hover:bg-violet-500/90 text-white px-4 py-1.5 rounded-xl font-medium transition-all border border-violet-400/30 shadow-[0_2px_12px_rgba(139,92,246,0.25)]"
+              className="text-sm bg-indigo-500/70 hover:bg-indigo-500/90 text-white px-4 py-1.5 rounded-xl font-medium transition-all border border-indigo-400/30 shadow-[0_2px_12px_rgba(99,102,241,0.25)]"
             >
               + Новый эпик
             </button>
