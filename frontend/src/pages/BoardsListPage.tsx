@@ -16,6 +16,8 @@ export default function BoardsListPage() {
   const teamId = useAuthStore((s) => s.teamId)
   const [showCreate, setShowCreate] = useState(false)
   const [openMenuId, setOpenMenuId] = useState<string | null>(null)
+  const [nameFilter, setNameFilter] = useState('')
+  const [dirFilter, setDirFilter] = useState('')
   const queryClient = useQueryClient()
   const { subscribe } = useWebSocket()
 
@@ -77,15 +79,25 @@ export default function BoardsListPage() {
   const myDirectionId = myTeam?.directionId
   const myTeamBoardIdSet = useMemo(() => new Set(myTeamBoardIds), [myTeamBoardIds])
 
+  const filteredBoards = useMemo(() => {
+    if (role !== 'ADMIN') return boards
+    return boards.filter((b) => {
+      const matchesName = !nameFilter || b.name.toLowerCase().includes(nameFilter.toLowerCase())
+      const matchesDir = !dirFilter || b.directionId === dirFilter
+      return matchesName && matchesDir
+    })
+  }, [boards, role, nameFilter, dirFilter])
+
   // Для тимлида и разраба — 3 группы, для остальных — плоский список
   const groups = useMemo<Array<{ label: string; boards: Board[] }>>(() => {
+    const source = role === 'ADMIN' ? filteredBoards : boards
     if (!isTeamMember || !myDirectionId) {
-      return [{ label: '', boards }]
+      return [{ label: '', boards: source }]
     }
     const tier1: Board[] = []
     const tier2: Board[] = []
     const tier3: Board[] = []
-    for (const board of boards) {
+    for (const board of source) {
       if (myTeamBoardIdSet.has(board.id)) {
         tier1.push(board)
       } else if (board.directionId === myDirectionId) {
@@ -99,7 +111,7 @@ export default function BoardsListPage() {
       { label: 'Моё направление', boards: tier2 },
       { label: 'Другие направления', boards: tier3 },
     ].filter((g) => g.boards.length > 0)
-  }, [boards, isTeamMember, myDirectionId, myTeamBoardIdSet])
+  }, [boards, filteredBoards, role, isTeamMember, myDirectionId, myTeamBoardIdSet])
 
   if (isLoading) {
     return (
@@ -129,9 +141,30 @@ export default function BoardsListPage() {
         <div className="fixed inset-0 z-0" onClick={() => setOpenMenuId(null)} />
       )}
 
-      <header className="bg-white border-b px-6 py-4 flex items-center justify-between">
-        <h1 className="text-xl font-bold text-gray-800">Доски</h1>
-        <div className="flex items-center gap-3">
+      <header className="bg-white border-b px-6 py-4 flex items-center justify-between gap-4">
+        <h1 className="text-xl font-bold text-gray-800 shrink-0">Доски</h1>
+        {role === 'ADMIN' && (
+          <div className="flex items-center gap-2 flex-1 max-w-md">
+            <input
+              type="search"
+              placeholder="Поиск по названию…"
+              value={nameFilter}
+              onChange={(e) => setNameFilter(e.target.value)}
+              className="flex-1 text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-300"
+            />
+            <select
+              value={dirFilter}
+              onChange={(e) => setDirFilter(e.target.value)}
+              className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-300 bg-white"
+            >
+              <option value="">Все направления</option>
+              {directions.map((d) => (
+                <option key={d.id} value={d.id}>{d.name}</option>
+              ))}
+            </select>
+          </div>
+        )}
+        <div className="flex items-center gap-3 shrink-0">
           {(role === 'ADMIN' || role === 'TEAM_LEAD') && (
             <Link
               to="/teams"
@@ -178,7 +211,7 @@ export default function BoardsListPage() {
       </header>
 
       <main className="p-6 flex flex-col gap-6">
-        {boards.length === 0 ? (
+        {groups.every((g) => g.boards.length === 0) ? (
           <p className="text-gray-400">Доски не найдены.</p>
         ) : (
           groups.map((group) => (

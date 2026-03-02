@@ -1,1 +1,1 @@
-rootProject.name = "kanban"
+rootProject.name = "tehartel"
