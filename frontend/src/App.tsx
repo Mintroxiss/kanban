@@ -16,9 +16,24 @@ import ArchivedEpicsPage from './pages/ArchivedEpicsPage'
 import UsersPage from './pages/UsersPage'
 import TeamsPage from './pages/TeamsPage'
 import DirectionsPage from './pages/DirectionsPage'
+
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 30_000 } },
 })
+
+/** Decorative ambient orbs — fixed behind all content */
+function GlobalBackground() {
+  return (
+    <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+      <div className="absolute -top-48 -left-48 w-[700px] h-[700px] rounded-full"
+        style={{ background: 'radial-gradient(circle, rgba(79,70,229,0.18) 0%, transparent 65%)' }} />
+      <div className="absolute top-1/2 -right-32 w-[500px] h-[500px] rounded-full"
+        style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.13) 0%, transparent 65%)' }} />
+      <div className="absolute -bottom-48 left-1/3 w-[600px] h-[600px] rounded-full"
+        style={{ background: 'radial-gradient(circle, rgba(59,130,246,0.10) 0%, transparent 65%)' }} />
+    </div>
+  )
+}
 
 function OfflineBanner() {
   const { isConnected } = useWebSocket()
@@ -38,7 +53,7 @@ function OfflineBanner() {
   if (!show || !token) return null
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-[100] bg-red-600 text-white text-sm text-center py-2 shadow-md">
+    <div className="fixed top-0 left-0 right-0 z-[100] backdrop-blur-xl bg-red-500/80 border-b border-red-400/30 text-white text-sm text-center py-2.5 shadow-lg">
       Соединение с сервером потеряно. Данные могут быть устаревшими.
     </div>
   )
@@ -53,8 +68,6 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
 function GlobalNotifications() {
   useUserNotifications()
 
-  // При старте подтягиваем актуальные role и teamId из БД через refresh —
-  // это исправляет устаревшую роль в localStorage без перелогина
   useEffect(() => {
     const { refreshToken } = useAuthStore.getState()
     if (!refreshToken) return
@@ -71,7 +84,7 @@ function GlobalNotifications() {
       {notifications.map((n) => (
         <div
           key={n.id}
-          className="bg-gray-800 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-lg"
+          className="backdrop-blur-xl bg-white/[0.19] border border-white/[0.18] text-white/95 text-sm font-medium px-4 py-3 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.4)]"
         >
           {n.message}
         </div>
@@ -84,70 +97,22 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <WebSocketProvider>
-      <BrowserRouter>
-        <OfflineBanner />
-        <GlobalNotifications />
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route
-            path="/boards"
-            element={
-              <ProtectedRoute>
-                <BoardsListPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/boards/archived"
-            element={
-              <ProtectedRoute>
-                <ArchivedBoardsPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/boards/:boardId/epics/archived"
-            element={
-              <ProtectedRoute>
-                <ArchivedEpicsPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/boards/:boardId"
-            element={
-              <ProtectedRoute>
-                <BoardPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/users"
-            element={
-              <ProtectedRoute>
-                <UsersPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/teams"
-            element={
-              <ProtectedRoute>
-                <TeamsPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/directions"
-            element={
-              <ProtectedRoute>
-                <DirectionsPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="*" element={<Navigate to="/boards" replace />} />
-        </Routes>
-      </BrowserRouter>
+        <BrowserRouter>
+          <GlobalBackground />
+          <OfflineBanner />
+          <GlobalNotifications />
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/boards" element={<ProtectedRoute><BoardsListPage /></ProtectedRoute>} />
+            <Route path="/boards/archived" element={<ProtectedRoute><ArchivedBoardsPage /></ProtectedRoute>} />
+            <Route path="/boards/:boardId/epics/archived" element={<ProtectedRoute><ArchivedEpicsPage /></ProtectedRoute>} />
+            <Route path="/boards/:boardId" element={<ProtectedRoute><BoardPage /></ProtectedRoute>} />
+            <Route path="/users" element={<ProtectedRoute><UsersPage /></ProtectedRoute>} />
+            <Route path="/teams" element={<ProtectedRoute><TeamsPage /></ProtectedRoute>} />
+            <Route path="/directions" element={<ProtectedRoute><DirectionsPage /></ProtectedRoute>} />
+            <Route path="*" element={<Navigate to="/boards" replace />} />
+          </Routes>
+        </BrowserRouter>
       </WebSocketProvider>
     </QueryClientProvider>
   )

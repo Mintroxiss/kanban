@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react'
+import ConfirmDialog from '../components/ConfirmDialog'
 import { useParams, Link } from 'react-router-dom'
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
 import { getArchivedEpics, restoreEpic, deleteEpic, getEpicTasks } from '../api/epics'
@@ -18,13 +19,11 @@ export default function ArchivedEpicsPage() {
     queryFn: () => getBoard(boardId!),
     enabled: !!boardId,
   })
-
   const { data: epics = [], isLoading } = useQuery({
     queryKey: ['epics-archived', boardId],
     queryFn: () => getArchivedEpics(boardId!),
     enabled: !!boardId,
   })
-
   const { data: columns = [] } = useQuery({
     queryKey: ['columns', boardId],
     queryFn: () => getColumns(boardId!),
@@ -52,35 +51,29 @@ export default function ArchivedEpicsPage() {
   useBoardSocket(boardId ?? '', handleEvent)
 
   function handleRestored(epicId: string) {
-    queryClient.setQueryData<Epic[]>(['epics-archived', boardId], (old = []) =>
-      old.filter((e) => e.id !== epicId)
-    )
+    queryClient.setQueryData<Epic[]>(['epics-archived', boardId], (old = []) => old.filter((e) => e.id !== epicId))
     queryClient.invalidateQueries({ queryKey: ['epics', boardId] })
     queryClient.invalidateQueries({ queryKey: ['grouped-tasks', boardId] })
   }
 
   function handleDeleted(epicId: string) {
-    queryClient.setQueryData<Epic[]>(['epics-archived', boardId], (old = []) =>
-      old.filter((e) => e.id !== epicId)
-    )
+    queryClient.setQueryData<Epic[]>(['epics-archived', boardId], (old = []) => old.filter((e) => e.id !== epicId))
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b px-6 py-4 flex items-center gap-4">
-        <Link to={`/boards/${boardId}`} className="text-sm text-blue-600 hover:underline">
-          ← Доска
-        </Link>
-        <h1 className="text-xl font-bold text-gray-800">
-          Архив эпиков{board ? ` доски «${board.name}»` : ''}
+    <div className="relative min-h-screen z-10">
+      <header className="sticky top-0 z-20 backdrop-blur-2xl bg-white/[0.11] border-b border-white/[0.23] px-6 py-4 flex items-center gap-4">
+        <Link to={`/boards/${boardId}`} className="text-sm text-indigo-300/80 hover:text-indigo-200 transition-colors">← Доска</Link>
+        <h1 className="text-lg font-semibold text-white/95">
+          Архив эпиков{board ? ` · ${board.name}` : ''}
         </h1>
       </header>
 
-      <main className="p-6 flex flex-col gap-6">
+      <main className="p-6 flex flex-col gap-4">
         {isLoading ? (
-          <p className="text-gray-400">Загрузка…</p>
+          <p className="text-white/35 text-sm">Загрузка…</p>
         ) : epics.length === 0 ? (
-          <p className="text-gray-400">Архив эпиков пуст.</p>
+          <p className="text-white/35 text-sm">Архив эпиков пуст.</p>
         ) : (
           epics.map((epic) => (
             <EpicCard
@@ -98,58 +91,42 @@ export default function ArchivedEpicsPage() {
 }
 
 function EpicCard({
-  epic,
-  columns,
-  onRestored,
-  onDeleted,
+  epic, columns, onRestored, onDeleted,
 }: {
-  epic: Epic
-  columns: Column[]
-  onRestored: (id: string) => void
-  onDeleted: (id: string) => void
+  epic: Epic; columns: Column[]; onRestored: (id: string) => void; onDeleted: (id: string) => void
 }) {
   const [showReassign, setShowReassign] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   const { data: tasks = [], isLoading: loadingTasks } = useQuery({
     queryKey: ['epic-tasks', epic.id],
     queryFn: () => getEpicTasks(epic.id),
   })
 
-  const columnMap: Record<string, string> = Object.fromEntries(
-    columns.map((c: Column) => [c.id, c.title])
-  )
-
-  // Задачи без актуальной колонки: columnId null ИЛИ колонка уже удалена (stale cache)
+  const columnMap: Record<string, string> = Object.fromEntries(columns.map((c: Column) => [c.id, c.title]))
   const orphaned = tasks.filter((t) => !t.columnId || !columnMap[t.columnId])
 
   const restoreMutation = useMutation({
     mutationFn: () => restoreEpic(epic.id),
     onSuccess: () => onRestored(epic.id),
   })
-
   const deleteMutation = useMutation({
     mutationFn: () => deleteEpic(epic.id),
     onSuccess: () => onDeleted(epic.id),
   })
 
   function handleRestoreClick() {
-    if (orphaned.length > 0) {
-      setShowReassign(true)
-    } else {
-      restoreMutation.mutate()
-    }
+    if (orphaned.length > 0) setShowReassign(true)
+    else restoreMutation.mutate()
   }
 
   async function handleReassignConfirm(assignments: Record<string, string>) {
-    await Promise.all(
-      Object.entries(assignments).map(([taskId, colId]) => moveTask(taskId, colId))
-    )
+    await Promise.all(Object.entries(assignments).map(([taskId, colId]) => moveTask(taskId, colId)))
     await restoreEpic(epic.id)
     onRestored(epic.id)
     setShowReassign(false)
   }
 
-  // Группировка задач по колонкам для отображения
   const grouped: Record<string, Task[]> = {}
   for (const task of tasks) {
     const key = task.columnId && columnMap[task.columnId] ? task.columnId : '__deleted__'
@@ -158,15 +135,13 @@ function EpicCard({
 
   return (
     <>
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+      <div className="backdrop-blur-md bg-white/[0.11] border border-white/[0.23] rounded-2xl p-5">
         <div className="flex items-start justify-between gap-4 mb-3">
           <div>
-            <h2 className="font-semibold text-gray-800">{epic.title}</h2>
-            {epic.description && (
-              <p className="text-sm text-gray-500 mt-0.5">{epic.description}</p>
-            )}
+            <h2 className="font-semibold text-white/90">{epic.title}</h2>
+            {epic.description && <p className="text-sm text-white/50 mt-0.5">{epic.description}</p>}
             {orphaned.length > 0 && (
-              <p className="text-xs text-amber-600 mt-1">
+              <p className="text-xs text-amber-300/70 mt-1">
                 {orphaned.length} {orphaned.length === 1 ? 'задача без колонки' : 'задачи без колонки'} — потребуется распределение
               </p>
             )}
@@ -175,18 +150,14 @@ function EpicCard({
             <button
               disabled={restoreMutation.isPending || loadingTasks}
               onClick={handleRestoreClick}
-              className="text-sm bg-green-600 text-white px-3 py-1.5 rounded-lg font-medium hover:bg-green-700 disabled:opacity-50 transition-colors"
+              className="text-sm bg-emerald-500/70 hover:bg-emerald-500/90 text-white px-3 py-1.5 rounded-xl font-medium disabled:opacity-50 transition-all border border-emerald-400/30"
             >
               {restoreMutation.isPending ? 'Восстанавливаем…' : 'Восстановить'}
             </button>
             <button
               disabled={deleteMutation.isPending}
-              onClick={() => {
-                if (confirm(`Удалить эпик «${epic.title}» и все его задачи навсегда?`)) {
-                  deleteMutation.mutate()
-                }
-              }}
-              className="text-sm bg-red-600 text-white px-3 py-1.5 rounded-lg font-medium hover:bg-red-700 disabled:opacity-50 transition-colors"
+              onClick={() => setShowDeleteConfirm(true)}
+              className="text-sm bg-red-500/60 hover:bg-red-500/80 text-white px-3 py-1.5 rounded-xl font-medium disabled:opacity-50 transition-all border border-red-400/25"
             >
               Удалить
             </button>
@@ -194,26 +165,23 @@ function EpicCard({
         </div>
 
         {loadingTasks ? (
-          <p className="text-sm text-gray-400">Загрузка задач…</p>
+          <p className="text-sm text-white/35">Загрузка задач…</p>
         ) : tasks.length === 0 ? (
-          <p className="text-sm text-gray-400">Нет задач.</p>
+          <p className="text-sm text-white/35">Нет задач.</p>
         ) : (
           <div className="flex flex-col gap-2">
             {Object.entries(grouped).map(([colId, colTasks]) => (
               <div key={colId}>
-                <span className={`text-xs font-medium uppercase tracking-wide ${colId === '__deleted__' ? 'text-amber-500' : 'text-gray-500'}`}>
+                <span className={`text-xs font-medium uppercase tracking-wide ${colId === '__deleted__' ? 'text-amber-300/70' : 'text-white/40'}`}>
                   {colId === '__deleted__' ? 'Колонка удалена' : columnMap[colId]}
                 </span>
                 <ul className="mt-1 flex flex-wrap gap-2">
                   {colTasks.map((task) => (
-                    <li
-                      key={task.id}
-                      className={`text-sm rounded-lg px-2.5 py-1 ${
-                        colId === '__deleted__'
-                          ? 'bg-amber-50 border border-amber-200 text-amber-800'
-                          : 'bg-gray-50 border border-gray-200 text-gray-700'
-                      }`}
-                    >
+                    <li key={task.id} className={`text-sm rounded-xl px-2.5 py-1 ${
+                      colId === '__deleted__'
+                        ? 'bg-amber-400/[0.10] border border-amber-400/20 text-amber-200/80'
+                        : 'bg-white/[0.11] border border-white/[0.23] text-white/65'
+                    }`}>
                       {task.title}
                     </li>
                   ))}
@@ -231,6 +199,17 @@ function EpicCard({
           columns={columns}
           onConfirm={handleReassignConfirm}
           onCancel={() => setShowReassign(false)}
+        />
+      )}
+
+      {showDeleteConfirm && (
+        <ConfirmDialog
+          title={`Удалить эпик «${epic.title}» навсегда?`}
+          description="Все задачи эпика будут удалены безвозвратно."
+          confirmLabel="Удалить"
+          danger
+          onConfirm={() => { deleteMutation.mutate(); setShowDeleteConfirm(false) }}
+          onCancel={() => setShowDeleteConfirm(false)}
         />
       )}
     </>

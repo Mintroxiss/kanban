@@ -50,7 +50,7 @@ function AddColumnPanel({ boardId, nextOrder }: { boardId: string; nextOrder: nu
       <div className="flex flex-col w-72 shrink-0">
         <button
           onClick={() => setIsOpen(true)}
-          className="text-sm text-gray-400 hover:text-gray-700 hover:bg-gray-200 rounded-xl px-4 py-3 text-left transition-colors bg-gray-100"
+          className="text-sm text-white/35 hover:text-white/65 hover:bg-white/[0.19] rounded-2xl px-4 py-3 text-left transition-colors backdrop-blur-md bg-white/[0.04] border border-white/[0.07] border-dashed"
         >
           + Добавить колонку
         </button>
@@ -60,7 +60,7 @@ function AddColumnPanel({ boardId, nextOrder }: { boardId: string; nextOrder: nu
 
   return (
     <div className="flex flex-col w-72 shrink-0">
-      <div className="bg-gray-100 rounded-xl p-3 flex flex-col gap-2">
+      <div className="backdrop-blur-md bg-white/[0.19] border border-white/[0.18] rounded-2xl p-3 flex flex-col gap-2">
         <input
           autoFocus
           type="text"
@@ -71,19 +71,19 @@ function AddColumnPanel({ boardId, nextOrder }: { boardId: string; nextOrder: nu
             if (e.key === 'Escape') { setIsOpen(false); setTitle('') }
           }}
           placeholder="Название колонки"
-          className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="bg-white/[0.14] border border-white/[0.20] rounded-xl px-3 py-2 text-sm text-white/90 placeholder:text-white/30 focus:outline-none focus:border-indigo-400/50 transition-all"
         />
         <div className="flex gap-2">
           <button
             disabled={!title.trim() || mutation.isPending}
             onClick={() => mutation.mutate()}
-            className="text-sm bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700 disabled:opacity-40 transition-colors"
+            className="text-sm bg-indigo-500/80 hover:bg-indigo-500/95 text-white px-3 py-1.5 rounded-xl disabled:opacity-40 transition-all border border-indigo-400/30"
           >
             Добавить
           </button>
           <button
             onClick={() => { setIsOpen(false); setTitle('') }}
-            className="text-sm text-gray-500 hover:text-gray-700 px-2"
+            className="text-sm text-white/40 hover:text-white/70 px-2 transition-colors"
           >
             ✕
           </button>
@@ -94,32 +94,18 @@ function AddColumnPanel({ boardId, nextOrder }: { boardId: string; nextOrder: nu
 }
 
 export default function BoardView({
-  boardId,
-  columns,
-  groupedTasks,
-  epics,
-  selectedEpicId,
-  canManage,
-  isAdmin,
-  teamId,
-  role,
-  userId,
-  epicTeamNameMap,
+  boardId, columns, groupedTasks, epics, selectedEpicId,
+  canManage, isAdmin, teamId, role, userId, epicTeamNameMap,
 }: Props) {
   const queryClient = useQueryClient()
   const todayStr = useMidnightTick()
   const [activeTask, setActiveTask] = useState<Task | null>(null)
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
-  )
-
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
   const columnIds = columns.map((c) => c.id)
 
   function findTaskColumn(taskId: string): string | undefined {
-    return Object.entries(groupedTasks).find(([, tasks]) =>
-      tasks.some((t) => t.id === taskId)
-    )?.[0]
+    return Object.entries(groupedTasks).find(([, tasks]) => tasks.some((t) => t.id === taskId))?.[0]
   }
 
   function findTask(taskId: string): Task | undefined {
@@ -137,51 +123,27 @@ export default function BoardView({
     setActiveTask(null)
     const { active, over } = event
     if (!over) return
-
     const taskId = String(active.id)
     const overId = String(over.id)
-
-    const targetColumnId = columnIds.includes(overId)
-      ? overId
-      : findTaskColumn(overId)
-
+    const targetColumnId = columnIds.includes(overId) ? overId : findTaskColumn(overId)
     if (!targetColumnId) return
-
     const sourceColumnId = findTaskColumn(taskId)
     if (!sourceColumnId || sourceColumnId === targetColumnId) return
-
     const task = findTask(taskId)
     if (!task) return
-
-    // Оптимистичное обновление кэша: перемещаем задачу локально до ответа сервера
     const queryKey = ['grouped-tasks', boardId, selectedEpicId || undefined]
     const previous = queryClient.getQueryData<Record<string, Task[]>>(queryKey)
-
     queryClient.setQueryData<Record<string, Task[]>>(queryKey, (old = {}) => {
       const next = { ...old }
       next[sourceColumnId] = (next[sourceColumnId] ?? []).filter((t) => t.id !== taskId)
-      next[targetColumnId] = [
-        ...(next[targetColumnId] ?? []),
-        { ...task, columnId: targetColumnId },
-      ]
+      next[targetColumnId] = [...(next[targetColumnId] ?? []), { ...task, columnId: targetColumnId }]
       return next
     })
-
-    moveTask(taskId, targetColumnId).catch(() => {
-      if (previous) {
-        queryClient.setQueryData(queryKey, previous)
-      }
-    })
+    moveTask(taskId, targetColumnId).catch(() => { if (previous) queryClient.setQueryData(queryKey, previous) })
   }
 
   const sortedColumns = [...columns].sort((a, b) => a.order - b.order)
-
-  // TEAM_LEAD видит в форме создания задачи только эпики своей команды
-  const manageableEpics = isAdmin
-    ? epics
-    : epics.filter((e) => e.teamId != null && e.teamId === teamId)
-
-  // Показываем "Add card" только если есть доступные эпики (для TEAM_LEAD)
+  const manageableEpics = isAdmin ? epics : epics.filter((e) => e.teamId != null && e.teamId === teamId)
   const effectiveCanManage = isAdmin ? canManage : canManage && manageableEpics.length > 0
 
   return (
@@ -198,9 +160,7 @@ export default function BoardView({
             })}
             boardId={boardId}
             epics={manageableEpics}
-            defaultEpicId={selectedEpicId && manageableEpics.some(e => e.id === selectedEpicId)
-              ? selectedEpicId
-              : undefined}
+            defaultEpicId={selectedEpicId && manageableEpics.some(e => e.id === selectedEpicId) ? selectedEpicId : undefined}
             canManage={effectiveCanManage}
             isAdmin={isAdmin}
             role={role}
@@ -209,7 +169,10 @@ export default function BoardView({
           />
         ))}
         {isAdmin && (
-          <AddColumnPanel boardId={boardId} nextOrder={sortedColumns.length > 0 ? Math.max(...sortedColumns.map(c => c.order)) + 1 : 1} />
+          <AddColumnPanel
+            boardId={boardId}
+            nextOrder={sortedColumns.length > 0 ? Math.max(...sortedColumns.map(c => c.order)) + 1 : 1}
+          />
         )}
       </div>
 

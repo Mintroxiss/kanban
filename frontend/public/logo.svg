@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="32" height="32">
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#3B82F6"/>
+      <stop offset="100%" stop-color="#1E40AF"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="256" height="256" rx="48" fill="url(#bgGrad)"/>
+
+  <!-- Column backgrounds -->
+  <rect x="24"  y="40" width="60" height="176" rx="10" fill="white" fill-opacity="0.15"/>
+  <rect x="98"  y="40" width="60" height="176" rx="10" fill="white" fill-opacity="0.15"/>
+  <rect x="172" y="40" width="60" height="176" rx="10" fill="white" fill-opacity="0.15"/>
+
+  <!-- Column 1 cards -->
+  <rect x="32"  y="56"  width="44" height="14" rx="5" fill="white" fill-opacity="0.90"/>
+  <rect x="32"  y="78"  width="44" height="14" rx="5" fill="white" fill-opacity="0.75"/>
+  <rect x="32"  y="100" width="44" height="14" rx="5" fill="white" fill-opacity="0.75"/>
+  <rect x="32"  y="122" width="30" height="14" rx="5" fill="white" fill-opacity="0.50"/>
+
+  <!-- Column 2 cards -->
+  <rect x="106" y="56"  width="44" height="14" rx="5" fill="white" fill-opacity="0.90"/>
+  <rect x="106" y="78"  width="44" height="14" rx="5" fill="white" fill-opacity="0.75"/>
+  <rect x="106" y="100" width="28" height="14" rx="5" fill="white" fill-opacity="0.50"/>
+
+  <!-- Column 3 cards -->
+  <rect x="180" y="56"  width="44" height="14" rx="5" fill="white" fill-opacity="0.90"/>
+  <rect x="180" y="78"  width="28" height="14" rx="5" fill="white" fill-opacity="0.50"/>
+</svg>
