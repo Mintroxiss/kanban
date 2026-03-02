@@ -41,7 +41,7 @@ export default function ArchivedBoardsPage() {
     <div className="relative min-h-screen z-10">
       {openMenuId && <div className="fixed inset-0 z-0" onClick={() => setOpenMenuId(null)} />}
 
-      <header className="sticky top-0 z-20 backdrop-blur-2xl bg-white/[0.06] border-b border-white/[0.10] px-6 py-4 flex items-center gap-4">
+      <header className="sticky top-0 z-20 backdrop-blur-2xl bg-white/[0.11] border-b border-white/[0.23] px-6 py-4 flex items-center gap-4">
         <Link to="/boards" className="text-sm text-indigo-300/80 hover:text-indigo-200 transition-colors">← Доски</Link>
         <h1 className="text-lg font-semibold text-white/95">Архивные доски</h1>
       </header>
@@ -57,7 +57,7 @@ export default function ArchivedBoardsPage() {
               <div key={board.id} className="relative group">
                 <Link
                   to={`/boards/${board.id}`}
-                  className="block backdrop-blur-md bg-white/[0.06] border border-white/[0.10] rounded-2xl p-5 pr-10 hover:bg-white/[0.10] hover:border-white/[0.16] transition-all duration-200"
+                  className="block backdrop-blur-md bg-white/[0.11] border border-white/[0.23] rounded-2xl p-5 pr-10 hover:bg-white/[0.17] hover:border-white/[0.23] transition-all duration-200"
                 >
                   <h2 className="font-semibold text-white/80">{board.name}</h2>
                   <span className="text-xs text-white/35">Архивирована</span>
@@ -66,16 +66,16 @@ export default function ArchivedBoardsPage() {
                 <div className="absolute top-3 right-3 z-10">
                   <button
                     onClick={(e) => { e.preventDefault(); setOpenMenuId(openMenuId === board.id ? null : board.id) }}
-                    className="w-7 h-7 flex items-center justify-center rounded-lg text-white/30 hover:text-white/70 hover:bg-white/[0.10] transition-colors text-lg leading-none"
+                    className="w-7 h-7 flex items-center justify-center rounded-lg text-white/30 hover:text-white/70 hover:bg-white/[0.17] transition-colors text-lg leading-none"
                   >
                     ···
                   </button>
                   {openMenuId === board.id && (
-                    <div className="absolute right-0 mt-1 w-44 backdrop-blur-xl bg-white/[0.10] border border-white/[0.15] rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.4)] py-1 z-20">
+                    <div className="absolute right-0 mt-1 w-44 backdrop-blur-xl bg-white/[0.17] border border-white/[0.22] rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.4)] py-1 z-20">
                       <button
                         disabled={unarchiveMutation.isPending}
                         onClick={() => { setOpenMenuId(null); unarchiveMutation.mutate(board.id) }}
-                        className="w-full text-left px-3 py-2 text-sm text-white/70 hover:bg-white/[0.10] hover:text-white/95 disabled:opacity-50 transition-colors"
+                        className="w-full text-left px-3 py-2 text-sm text-white/70 hover:bg-white/[0.17] hover:text-white/95 disabled:opacity-50 transition-colors"
                       >
                         Восстановить
                       </button>

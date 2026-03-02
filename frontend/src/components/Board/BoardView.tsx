@@ -50,7 +50,7 @@ function AddColumnPanel({ boardId, nextOrder }: { boardId: string; nextOrder: nu
       <div className="flex flex-col w-72 shrink-0">
         <button
           onClick={() => setIsOpen(true)}
-          className="text-sm text-white/35 hover:text-white/65 hover:bg-white/[0.07] rounded-2xl px-4 py-3 text-left transition-colors backdrop-blur-md bg-white/[0.04] border border-white/[0.07] border-dashed"
+          className="text-sm text-white/35 hover:text-white/65 hover:bg-white/[0.19] rounded-2xl px-4 py-3 text-left transition-colors backdrop-blur-md bg-white/[0.04] border border-white/[0.07] border-dashed"
         >
           + Добавить колонку
         </button>
@@ -60,7 +60,7 @@ function AddColumnPanel({ boardId, nextOrder }: { boardId: string; nextOrder: nu
 
   return (
     <div className="flex flex-col w-72 shrink-0">
-      <div className="backdrop-blur-md bg-white/[0.07] border border-white/[0.12] rounded-2xl p-3 flex flex-col gap-2">
+      <div className="backdrop-blur-md bg-white/[0.19] border border-white/[0.18] rounded-2xl p-3 flex flex-col gap-2">
         <input
           autoFocus
           type="text"
@@ -71,7 +71,7 @@ function AddColumnPanel({ boardId, nextOrder }: { boardId: string; nextOrder: nu
             if (e.key === 'Escape') { setIsOpen(false); setTitle('') }
           }}
           placeholder="Название колонки"
-          className="bg-white/[0.08] border border-white/[0.14] rounded-xl px-3 py-2 text-sm text-white/90 placeholder:text-white/30 focus:outline-none focus:border-indigo-400/50 transition-all"
+          className="bg-white/[0.14] border border-white/[0.20] rounded-xl px-3 py-2 text-sm text-white/90 placeholder:text-white/30 focus:outline-none focus:border-indigo-400/50 transition-all"
         />
         <div className="flex gap-2">
           <button

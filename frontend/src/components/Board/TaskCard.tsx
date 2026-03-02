@@ -110,10 +110,10 @@ export const TaskCardDisplay = forwardRef<HTMLDivElement, DisplayProps>(
           ref={ref}
           {...props}
           onClick={() => setOpen(true)}
-          className={`relative rounded-xl border-l-4 border border-white/[0.08] p-3 shadow-sm hover:shadow-md transition-all select-none
+          className={`relative rounded-xl border-l-4 border border-white/[0.13] p-3 shadow-sm hover:shadow-md transition-all select-none
             ${STATUS_ACCENT[task.status] ?? 'border-l-white/20'}
             ${canDrag ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'}
-            ${isMyTask ? 'backdrop-blur-md bg-indigo-500/[0.28] border-indigo-400/50 shadow-[0_0_0_1px_rgba(99,102,241,0.25),0_4px_16px_rgba(99,102,241,0.20)]' : 'backdrop-blur-md bg-white/[0.06] hover:bg-white/[0.09]'}`}
+            ${isMyTask ? 'backdrop-blur-md bg-indigo-500/[0.28] border-indigo-400/50 shadow-[0_0_0_1px_rgba(99,102,241,0.25),0_4px_16px_rgba(99,102,241,0.20)]' : 'backdrop-blur-md bg-white/[0.11] hover:bg-white/[0.15]'}`}
         >
           <div className="flex items-start gap-1 mb-2">
             <p className="font-medium text-sm text-white/88 flex-1 min-w-0">{task.title}</p>
@@ -122,14 +122,14 @@ export const TaskCardDisplay = forwardRef<HTMLDivElement, DisplayProps>(
                 <button
                   onClick={(e) => { e.stopPropagation(); setMenuOpen((v) => !v) }}
                   onPointerDown={(e) => e.stopPropagation()}
-                  className="text-white/25 hover:text-white/65 text-sm leading-none px-1 rounded-lg hover:bg-white/[0.08] transition-colors"
+                  className="text-white/25 hover:text-white/65 text-sm leading-none px-1 rounded-lg hover:bg-white/[0.14] transition-colors"
                 >
                   ···
                 </button>
                 {menuOpen && (
                   <>
                     <div className="fixed inset-0 z-10" onClick={(e) => { e.stopPropagation(); setMenuOpen(false) }} />
-                    <div className="absolute right-0 top-6 z-20 backdrop-blur-xl bg-white/[0.10] border border-white/[0.15] rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.4)] py-1 min-w-[160px]">
+                    <div className="absolute right-0 top-6 z-20 backdrop-blur-xl bg-white/[0.17] border border-white/[0.22] rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.4)] py-1 min-w-[160px]">
                       <button
                         disabled={releaseMutation.isPending}
                         onClick={(e) => { e.stopPropagation(); releaseMutation.mutate() }}
@@ -187,7 +187,7 @@ export const TaskCardDisplay = forwardRef<HTMLDivElement, DisplayProps>(
               <button
                 disabled={takeMutation.isPending}
                 onClick={(e) => { e.stopPropagation(); setConfirmTake(false) }}
-                className="text-xs bg-white/[0.08] text-white/60 px-2 py-0.5 rounded-lg hover:bg-white/[0.14] disabled:opacity-50 transition-colors"
+                className="text-xs bg-white/[0.14] text-white/60 px-2 py-0.5 rounded-lg hover:bg-white/[0.14] disabled:opacity-50 transition-colors"
               >
                 Нет
               </button>
@@ -198,7 +198,7 @@ export const TaskCardDisplay = forwardRef<HTMLDivElement, DisplayProps>(
         {open && createPortal(
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50" onClick={closeModal}>
             <div
-              className="backdrop-blur-2xl bg-white/[0.10] border border-white/[0.15] rounded-3xl shadow-[0_24px_80px_rgba(0,0,0,0.6)] p-6 max-w-md w-full mx-4"
+              className="backdrop-blur-2xl bg-white/[0.17] border border-white/[0.22] rounded-3xl shadow-[0_24px_80px_rgba(0,0,0,0.6)] p-6 max-w-md w-full mx-4"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-start justify-between mb-4">
@@ -212,20 +212,22 @@ export const TaskCardDisplay = forwardRef<HTMLDivElement, DisplayProps>(
                 <div className="flex items-center gap-2">
                   <span className="font-medium text-white/75">Статус:</span>
                   {canChangeStatus ? (
-                    <select
-                      value={modalStatus}
-                      onChange={(e) => {
-                        const val = e.target.value as Task['status']
-                        setModalStatus(val)
-                        if (task.columnId) statusMutation.mutate(val)
-                      }}
-                      disabled={statusMutation.isPending}
-                      className="text-xs bg-white/[0.08] border border-white/[0.14] rounded-lg px-2 py-0.5 text-white/80 focus:outline-none focus:border-indigo-400/50 disabled:opacity-50 transition-all"
-                    >
-                      <option value="TO_DO">К выполнению</option>
-                      <option value="IN_PROGRESS">В работе</option>
-                      <option value="DONE">Готово</option>
-                    </select>
+                    <div className="flex gap-1.5 flex-wrap">
+                      {(['TO_DO', 'IN_PROGRESS', 'DONE'] as const).map((s) => (
+                        <button
+                          key={s}
+                          disabled={statusMutation.isPending}
+                          onClick={() => { setModalStatus(s); if (task.columnId) statusMutation.mutate(s) }}
+                          className={`text-xs px-2 py-0.5 rounded-full font-medium border transition-all disabled:opacity-50 ${
+                            modalStatus === s
+                              ? STATUS_GLASS[s]
+                              : 'bg-white/[0.06] text-white/35 border-white/[0.10] hover:bg-white/[0.12] hover:text-white/60'
+                          }`}
+                        >
+                          {STATUS_LABELS[s]}
+                        </button>
+                      ))}
+                    </div>
                   ) : (
                     <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_GLASS[task.status] ?? ''}`}>
                       {STATUS_LABELS[task.status] ?? task.status}
@@ -253,7 +255,7 @@ export const TaskCardDisplay = forwardRef<HTMLDivElement, DisplayProps>(
               </div>
 
               {isAdmin && (
-                <div className="mt-5 pt-4 border-t border-white/[0.08] flex items-center justify-between gap-4">
+                <div className="mt-5 pt-4 border-t border-white/[0.13] flex items-center justify-between gap-4">
                   <button
                     onClick={() => { setOpen(false); setEditing(true) }}
                     className="text-sm text-indigo-300/80 hover:text-indigo-200 transition-colors"
@@ -277,7 +279,7 @@ export const TaskCardDisplay = forwardRef<HTMLDivElement, DisplayProps>(
                       <button
                         disabled={deleteMutation.isPending}
                         onClick={() => setConfirmDelete(false)}
-                        className="text-xs bg-white/[0.08] text-white/60 px-3 py-1 rounded-xl hover:bg-white/[0.14] disabled:opacity-50 transition-colors"
+                        className="text-xs bg-white/[0.14] text-white/60 px-3 py-1 rounded-xl hover:bg-white/[0.14] disabled:opacity-50 transition-colors"
                       >
                         Нет
                       </button>

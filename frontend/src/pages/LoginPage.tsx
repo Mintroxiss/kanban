@@ -54,7 +54,7 @@ export default function LoginPage() {
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
             <img
-              src="/vite.svg"
+              src="/logo.svg"
               alt="ТехАртель"
               className="w-16 h-16 drop-shadow-[0_0_16px_rgba(99,102,241,0.6)]"
             />
@@ -63,8 +63,8 @@ export default function LoginPage() {
           <p className="text-white/40 text-sm">Система управления проектами</p>
         </div>
 
-        <div className="backdrop-blur-2xl bg-white/[0.08] border border-white/[0.14] rounded-3xl shadow-[0_24px_80px_rgba(0,0,0,0.5)] p-8">
-          <div className="flex rounded-2xl bg-white/[0.06] border border-white/[0.10] p-1 mb-7">
+        <div className="backdrop-blur-2xl bg-white/[0.14] border border-white/[0.20] rounded-3xl shadow-[0_24px_80px_rgba(0,0,0,0.5)] p-8">
+          <div className="flex rounded-2xl bg-white/[0.11] border border-white/[0.23] p-1 mb-7">
             <button
               type="button"
               onClick={() => switchMode('login')}
@@ -97,7 +97,7 @@ export default function LoginPage() {
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 required
-                className="w-full bg-white/[0.08] border border-white/[0.15] rounded-2xl px-4 py-3 text-white/90 placeholder:text-white/30 focus:outline-none focus:border-indigo-400/60 focus:bg-white/[0.11] transition-all text-sm"
+                className="w-full bg-white/[0.14] border border-white/[0.22] rounded-2xl px-4 py-3 text-white/90 placeholder:text-white/30 focus:outline-none focus:border-indigo-400/60 focus:bg-white/[0.11] transition-all text-sm"
               />
             )}
             <input
@@ -106,7 +106,7 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full bg-white/[0.08] border border-white/[0.15] rounded-2xl px-4 py-3 text-white/90 placeholder:text-white/30 focus:outline-none focus:border-indigo-400/60 focus:bg-white/[0.11] transition-all text-sm"
+              className="w-full bg-white/[0.14] border border-white/[0.22] rounded-2xl px-4 py-3 text-white/90 placeholder:text-white/30 focus:outline-none focus:border-indigo-400/60 focus:bg-white/[0.11] transition-all text-sm"
             />
             <input
               type="password"
@@ -114,7 +114,7 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full bg-white/[0.08] border border-white/[0.15] rounded-2xl px-4 py-3 text-white/90 placeholder:text-white/30 focus:outline-none focus:border-indigo-400/60 focus:bg-white/[0.11] transition-all text-sm"
+              className="w-full bg-white/[0.14] border border-white/[0.22] rounded-2xl px-4 py-3 text-white/90 placeholder:text-white/30 focus:outline-none focus:border-indigo-400/60 focus:bg-white/[0.11] transition-all text-sm"
             />
             {mode === 'register' && (
               <input
@@ -123,7 +123,7 @@ export default function LoginPage() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
-                className="w-full bg-white/[0.08] border border-white/[0.15] rounded-2xl px-4 py-3 text-white/90 placeholder:text-white/30 focus:outline-none focus:border-indigo-400/60 focus:bg-white/[0.11] transition-all text-sm"
+                className="w-full bg-white/[0.14] border border-white/[0.22] rounded-2xl px-4 py-3 text-white/90 placeholder:text-white/30 focus:outline-none focus:border-indigo-400/60 focus:bg-white/[0.11] transition-all text-sm"
               />
             )}
             {error && (

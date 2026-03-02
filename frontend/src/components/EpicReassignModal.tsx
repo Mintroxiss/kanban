@@ -22,10 +22,10 @@ function DraggableTaskChip({ task }: { task: Task }) {
       style={transform ? { transform: `translate(${transform.x}px, ${transform.y}px)` } : undefined}
       {...listeners}
       {...attributes}
-      className={`backdrop-blur-md bg-white/[0.08] border rounded-xl px-3 py-1.5 text-sm text-white/80 cursor-grab select-none transition-all ${
+      className={`backdrop-blur-md bg-white/[0.14] border rounded-xl px-3 py-1.5 text-sm text-white/80 cursor-grab select-none transition-all ${
         isDragging
           ? 'opacity-40 border-indigo-400/60 shadow-lg'
-          : 'border-white/[0.14] hover:border-indigo-400/40 hover:bg-white/[0.12]'
+          : 'border-white/[0.20] hover:border-indigo-400/40 hover:bg-white/[0.19]'
       }`}
     >
       {task.title}
@@ -37,7 +37,7 @@ function DropZone({ id, label, tasks, variant }: { id: string; label: string; ta
   const { setNodeRef, isOver } = useDroppable({ id })
   const baseBg = variant === 'orphaned'
     ? 'bg-amber-400/[0.06] border-amber-400/20'
-    : 'bg-white/[0.04] border-white/[0.10]'
+    : 'bg-white/[0.04] border-white/[0.23]'
   const hoverBg = variant === 'orphaned'
     ? 'bg-amber-400/[0.12] border-amber-400/40'
     : 'bg-indigo-400/[0.10] border-indigo-400/40'
@@ -100,9 +100,9 @@ export default function EpicReassignModal({ epicTitle, orphanedTasks, columns, o
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="backdrop-blur-2xl bg-white/[0.09] border border-white/[0.14] rounded-3xl shadow-[0_24px_80px_rgba(0,0,0,0.6)] w-full max-w-3xl max-h-[90vh] flex flex-col">
+      <div className="backdrop-blur-2xl bg-white/[0.15] border border-white/[0.20] rounded-3xl shadow-[0_24px_80px_rgba(0,0,0,0.6)] w-full max-w-3xl max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="px-6 py-5 border-b border-white/[0.08] shrink-0">
+        <div className="px-6 py-5 border-b border-white/[0.13] shrink-0">
           <h2 className="text-lg font-semibold text-white/95">Восстановление эпика «{epicTitle}»</h2>
           <p className="text-sm text-white/50 mt-1">
             Часть задач осталась без колонки. Перетащите каждую задачу в одну из текущих колонок, затем нажмите «Восстановить».
@@ -137,7 +137,7 @@ export default function EpicReassignModal({ epicTitle, orphanedTasks, columns, o
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-white/[0.08] shrink-0 flex items-center justify-between gap-4">
+        <div className="px-6 py-4 border-t border-white/[0.13] shrink-0 flex items-center justify-between gap-4">
           <p className={`text-sm ${allAssigned ? 'text-emerald-300/80' : 'text-amber-300/80'}`}>
             {allAssigned
               ? 'Все задачи распределены — можно восстановить эпик.'
@@ -147,7 +147,7 @@ export default function EpicReassignModal({ epicTitle, orphanedTasks, columns, o
             <button
               onClick={onCancel}
               disabled={confirming}
-              className="text-sm text-white/50 hover:text-white/80 px-4 py-2 rounded-xl border border-white/[0.12] hover:bg-white/[0.08] disabled:opacity-50 transition-all"
+              className="text-sm text-white/50 hover:text-white/80 px-4 py-2 rounded-xl border border-white/[0.18] hover:bg-white/[0.14] disabled:opacity-50 transition-all"
             >
               Отмена
             </button>

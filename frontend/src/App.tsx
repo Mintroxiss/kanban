@@ -84,7 +84,7 @@ function GlobalNotifications() {
       {notifications.map((n) => (
         <div
           key={n.id}
-          className="backdrop-blur-xl bg-white/[0.12] border border-white/[0.18] text-white/95 text-sm font-medium px-4 py-3 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.4)]"
+          className="backdrop-blur-xl bg-white/[0.19] border border-white/[0.18] text-white/95 text-sm font-medium px-4 py-3 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.4)]"
         >
           {n.message}
         </div>

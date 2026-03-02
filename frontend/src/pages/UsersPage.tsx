@@ -25,7 +25,7 @@ export default function UsersPage() {
 
   return (
     <div className="relative min-h-screen z-10">
-      <header className="sticky top-0 z-20 backdrop-blur-2xl bg-white/[0.06] border-b border-white/[0.10] px-6 py-4 flex items-center gap-4">
+      <header className="sticky top-0 z-20 backdrop-blur-2xl bg-white/[0.11] border-b border-white/[0.23] px-6 py-4 flex items-center gap-4">
         <Link to="/boards" className="text-sm text-indigo-300/80 hover:text-indigo-200 transition-colors">← Доски</Link>
         <h1 className="text-lg font-semibold text-white/95">Пользователи</h1>
         <input
@@ -33,7 +33,7 @@ export default function UsersPage() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Поиск по имени…"
-          className="ml-auto bg-white/[0.07] border border-white/[0.12] rounded-xl px-3 py-1.5 text-sm text-white/85 placeholder:text-white/30 focus:outline-none focus:border-indigo-400/50 transition-all w-56"
+          className="ml-auto bg-white/[0.19] border border-white/[0.18] rounded-xl px-3 py-1.5 text-sm text-white/85 placeholder:text-white/30 focus:outline-none focus:border-indigo-400/50 transition-all w-56"
         />
       </header>
 

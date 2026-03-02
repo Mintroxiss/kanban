@@ -241,7 +241,7 @@ export default function BoardPage() {
   return (
     <div className="relative min-h-screen flex flex-col z-10">
       {/* Header */}
-      <header className="sticky top-0 z-20 backdrop-blur-2xl bg-white/[0.06] border-b border-white/[0.10] px-6 py-4 flex items-center gap-4 flex-wrap">
+      <header className="sticky top-0 z-20 backdrop-blur-2xl bg-white/[0.11] border-b border-white/[0.23] px-6 py-4 flex items-center gap-4 flex-wrap">
         <Link
           to={board?.archived ? '/boards/archived' : '/boards'}
           className="text-sm text-indigo-300/80 hover:text-indigo-200 transition-colors"
@@ -275,7 +275,7 @@ export default function BoardPage() {
             <div className="relative">
               <button
                 onClick={() => setEpicDropdownOpen((v) => !v)}
-                className="backdrop-blur-md bg-white/[0.07] border border-white/[0.12] rounded-xl px-3 py-1.5 text-sm text-white/80 hover:bg-white/[0.11] hover:border-white/[0.18] focus:outline-none transition-all flex items-center gap-2 min-w-[140px]"
+                className="backdrop-blur-md bg-white/[0.19] border border-white/[0.18] rounded-xl px-3 py-1.5 text-sm text-white/80 hover:bg-white/[0.11] hover:border-white/[0.18] focus:outline-none transition-all flex items-center gap-2 min-w-[140px]"
               >
                 <span className="flex-1 text-left">
                   {selectedEpicId ? (epics.find((e) => e.id === selectedEpicId)?.title ?? 'Все эпики') : 'Все эпики'}
@@ -286,10 +286,10 @@ export default function BoardPage() {
               {epicDropdownOpen && (
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setEpicDropdownOpen(false)} />
-                  <div className="absolute left-0 top-full mt-1 z-20 backdrop-blur-xl bg-white/[0.10] border border-white/[0.15] rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.4)] py-1 min-w-full w-max max-w-xs">
+                  <div className="absolute left-0 top-full mt-1 z-20 backdrop-blur-xl bg-white/[0.17] border border-white/[0.22] rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.4)] py-1 min-w-full w-max max-w-xs">
                     <button
                       onClick={() => { setSelectedEpicId(''); setEpicDropdownOpen(false) }}
-                      className={`w-full text-left text-sm px-3 py-2 transition-colors rounded-lg mx-0.5 ${!selectedEpicId ? 'text-indigo-300 font-medium bg-indigo-500/10' : 'text-white/70 hover:bg-white/[0.08] hover:text-white/90'}`}
+                      className={`w-full text-left text-sm px-3 py-2 transition-colors rounded-lg mx-0.5 ${!selectedEpicId ? 'text-indigo-300 font-medium bg-indigo-500/10' : 'text-white/70 hover:bg-white/[0.14] hover:text-white/90'}`}
                     >
                       Все эпики
                     </button>
@@ -297,7 +297,7 @@ export default function BoardPage() {
                       <button
                         key={epic.id}
                         onClick={() => { setSelectedEpicId(epic.id); setEpicDropdownOpen(false) }}
-                        className={`w-full text-left text-sm px-3 py-2 transition-colors rounded-lg mx-0.5 ${selectedEpicId === epic.id ? 'text-indigo-300 font-medium bg-indigo-500/10' : 'text-white/70 hover:bg-white/[0.08] hover:text-white/90'}`}
+                        className={`w-full text-left text-sm px-3 py-2 transition-colors rounded-lg mx-0.5 ${selectedEpicId === epic.id ? 'text-indigo-300 font-medium bg-indigo-500/10' : 'text-white/70 hover:bg-white/[0.14] hover:text-white/90'}`}
                       >
                         {epic.title}
                         {epic.teamId
@@ -332,7 +332,7 @@ export default function BoardPage() {
 
                   {epicTooltipVisible && !epicPopoverOpen && (
                     <div className="absolute right-0 top-full z-30 pt-1">
-                      <div className="backdrop-blur-xl bg-black/70 border border-white/[0.10] text-white/80 text-xs rounded-xl px-3 py-2 w-64 max-h-40 overflow-y-auto shadow-xl break-words whitespace-pre-wrap">
+                      <div className="backdrop-blur-xl bg-black/70 border border-white/[0.23] text-white/80 text-xs rounded-xl px-3 py-2 w-64 max-h-40 overflow-y-auto shadow-xl break-words whitespace-pre-wrap">
                         {selectedEpic.description ? selectedEpic.description : isAdmin ? 'Нажмите для добавления описания' : 'Нет описания'}
                       </div>
                     </div>
@@ -340,16 +340,16 @@ export default function BoardPage() {
                 </div>
 
                 {epicPopoverOpen && editingEpic && (
-                  <div className="absolute left-0 top-full mt-2 z-30 backdrop-blur-2xl bg-white/[0.10] border border-white/[0.15] rounded-2xl shadow-[0_16px_48px_rgba(0,0,0,0.5)] p-4 w-80">
+                  <div className="absolute left-0 top-full mt-2 z-30 backdrop-blur-2xl bg-white/[0.17] border border-white/[0.22] rounded-2xl shadow-[0_16px_48px_rgba(0,0,0,0.5)] p-4 w-80">
                     <p className="text-xs font-semibold text-white/40 uppercase tracking-wide mb-3">Редактирование эпика</p>
                     <input
-                      className="w-full bg-white/[0.08] border border-white/[0.14] rounded-xl px-3 py-2 text-sm text-white/90 placeholder:text-white/30 mb-2 outline-none focus:border-indigo-400/50 transition-all"
+                      className="w-full bg-white/[0.14] border border-white/[0.20] rounded-xl px-3 py-2 text-sm text-white/90 placeholder:text-white/30 mb-2 outline-none focus:border-indigo-400/50 transition-all"
                       value={editingEpic.title}
                       onChange={(e) => setEditingEpic({ ...editingEpic, title: e.target.value })}
                       placeholder="Название"
                     />
                     <textarea
-                      className="w-full bg-white/[0.08] border border-white/[0.14] rounded-xl px-3 py-2 text-sm text-white/90 placeholder:text-white/30 resize-none outline-none focus:border-indigo-400/50 transition-all"
+                      className="w-full bg-white/[0.14] border border-white/[0.20] rounded-xl px-3 py-2 text-sm text-white/90 placeholder:text-white/30 resize-none outline-none focus:border-indigo-400/50 transition-all"
                       rows={3}
                       value={editingEpic.description}
                       onChange={(e) => setEditingEpic({ ...editingEpic, description: e.target.value })}
@@ -358,7 +358,7 @@ export default function BoardPage() {
                     <div className="flex justify-end gap-2 mt-3">
                       <button
                         onClick={() => { setEpicPopoverOpen(false); setEditingEpic(null) }}
-                        className="text-sm text-white/50 hover:text-white/80 px-3 py-1.5 rounded-xl hover:bg-white/[0.08] transition-colors"
+                        className="text-sm text-white/50 hover:text-white/80 px-3 py-1.5 rounded-xl hover:bg-white/[0.14] transition-colors"
                       >
                         Отмена
                       </button>
@@ -392,7 +392,7 @@ export default function BoardPage() {
             )}
 
             {isAdmin && selectedEpicId && (
-              <div className="flex items-center gap-1 border-l border-white/[0.10] pl-2">
+              <div className="flex items-center gap-1 border-l border-white/[0.23] pl-2">
                 <button
                   disabled={archiveEpicMutation.isPending}
                   onClick={() => setConfirmEpicAction({ type: 'archive', epicId: selectedEpicId, title: selectedEpic?.title ?? '' })}

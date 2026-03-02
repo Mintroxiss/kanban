@@ -71,14 +71,14 @@ export default function KanbanColumn({
               if (e.key === 'Escape') { setEditing(false); setEditTitle(column.title) }
             }}
             onBlur={commitRename}
-            className="flex-1 bg-white/[0.08] border border-indigo-400/50 rounded-lg px-2 py-0.5 text-sm font-semibold text-white/90 uppercase tracking-wide focus:outline-none"
+            className="flex-1 bg-white/[0.14] border border-indigo-400/50 rounded-lg px-2 py-0.5 text-sm font-semibold text-white/90 uppercase tracking-wide focus:outline-none"
           />
         ) : (
           <>
             <h3 className="font-semibold text-xs text-white/50 uppercase tracking-widest flex-1 truncate">
               {column.title}
             </h3>
-            <span className="text-xs text-white/30 bg-white/[0.06] border border-white/[0.08] rounded-full px-2 py-0.5 shrink-0">
+            <span className="text-xs text-white/30 bg-white/[0.11] border border-white/[0.13] rounded-full px-2 py-0.5 shrink-0">
               {tasks.length}
             </span>
             {isAdmin && !confirmDelete && (
@@ -116,7 +116,7 @@ export default function KanbanColumn({
             <button
               disabled={deleteMutation.isPending}
               onClick={() => setConfirmDelete(false)}
-              className="text-xs bg-white/[0.08] text-white/60 px-2 py-0.5 rounded-lg hover:bg-white/[0.14] disabled:opacity-50 transition-colors"
+              className="text-xs bg-white/[0.14] text-white/60 px-2 py-0.5 rounded-lg hover:bg-white/[0.14] disabled:opacity-50 transition-colors"
             >
               Нет
             </button>
@@ -155,7 +155,7 @@ export default function KanbanColumn({
       {canManage && (
         <button
           onClick={() => setShowCreate(true)}
-          className="mt-2 text-sm text-white/30 hover:text-white/60 hover:bg-white/[0.06] rounded-xl px-2 py-1.5 text-left transition-colors"
+          className="mt-2 text-sm text-white/30 hover:text-white/60 hover:bg-white/[0.11] rounded-xl px-2 py-1.5 text-left transition-colors"
         >
           + Добавить задачу
         </button>

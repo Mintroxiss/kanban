@@ -5,7 +5,7 @@ import { useAuthStore } from '../store/authStore'
 import { getDirections, createDirection, updateDirection, deleteDirection } from '../api/directions'
 import type { Direction } from '../types'
 
-const inputCls = 'bg-white/[0.08] border border-white/[0.14] rounded-2xl px-4 py-2.5 text-sm text-white/90 placeholder:text-white/35 focus:outline-none focus:border-indigo-400/50 transition-all'
+const inputCls = 'bg-white/[0.14] border border-white/[0.20] rounded-2xl px-4 py-2.5 text-sm text-white/90 placeholder:text-white/35 focus:outline-none focus:border-indigo-400/50 transition-all'
 
 export default function DirectionsPage() {
   const queryClient = useQueryClient()
@@ -51,7 +51,7 @@ export default function DirectionsPage() {
 
   return (
     <div className="relative min-h-screen z-10">
-      <header className="sticky top-0 z-20 backdrop-blur-2xl bg-white/[0.06] border-b border-white/[0.10] px-6 py-4 flex items-center justify-between">
+      <header className="sticky top-0 z-20 backdrop-blur-2xl bg-white/[0.11] border-b border-white/[0.23] px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Link to="/boards" className="text-sm text-indigo-300/80 hover:text-indigo-200 transition-colors">← Доски</Link>
           <h1 className="text-lg font-semibold text-white/95">Направления</h1>
@@ -66,7 +66,7 @@ export default function DirectionsPage() {
 
       <main className="p-6 max-w-2xl mx-auto flex flex-col gap-4">
         {showCreate && (
-          <div className="backdrop-blur-md bg-white/[0.07] border border-indigo-400/20 rounded-2xl p-5">
+          <div className="backdrop-blur-md bg-white/[0.19] border border-indigo-400/20 rounded-2xl p-5">
             <h2 className="font-semibold text-white/90 mb-4">Новое направление</h2>
             <div className="flex flex-col gap-3">
               <input type="text" placeholder="Название" value={createName} onChange={(e) => setCreateName(e.target.value)} className={inputCls} />
@@ -81,7 +81,7 @@ export default function DirectionsPage() {
                 </button>
                 <button
                   onClick={() => { setShowCreate(false); setCreateName(''); setCreateDesc('') }}
-                  className="text-sm bg-white/[0.07] text-white/60 px-4 py-2 rounded-xl font-medium hover:bg-white/[0.12] transition-colors"
+                  className="text-sm bg-white/[0.19] text-white/60 px-4 py-2 rounded-xl font-medium hover:bg-white/[0.19] transition-colors"
                 >
                   Отмена
                 </button>
@@ -117,7 +117,7 @@ export default function DirectionsPage() {
                           </button>
                           <button
                             onClick={() => setEditingDir(null)}
-                            className="text-sm bg-white/[0.07] text-white/60 px-4 py-2 rounded-xl font-medium hover:bg-white/[0.12] transition-colors"
+                            className="text-sm bg-white/[0.19] text-white/60 px-4 py-2 rounded-xl font-medium hover:bg-white/[0.19] transition-colors"
                           >
                             Отмена
                           </button>
@@ -143,7 +143,7 @@ export default function DirectionsPage() {
                             </button>
                             <button
                               onClick={() => setConfirmDeleteId(null)}
-                              className="text-xs bg-white/[0.08] text-white/60 px-3 py-1.5 rounded-xl hover:bg-white/[0.14] transition-colors"
+                              className="text-xs bg-white/[0.14] text-white/60 px-3 py-1.5 rounded-xl hover:bg-white/[0.14] transition-colors"
                             >
                               Отмена
                             </button>
@@ -152,7 +152,7 @@ export default function DirectionsPage() {
                           <>
                             <button
                               onClick={() => startEdit(dir)}
-                              className="text-xs bg-white/[0.07] text-white/65 px-3 py-1.5 rounded-xl hover:bg-white/[0.13] transition-colors"
+                              className="text-xs bg-white/[0.19] text-white/65 px-3 py-1.5 rounded-xl hover:bg-white/[0.13] transition-colors"
                             >
                               Изменить
                             </button>

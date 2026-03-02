@@ -27,7 +27,7 @@ export default function CreateBoardModal({ onClose }: Props) {
   return createPortal(
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50" onClick={onClose}>
       <div
-        className="backdrop-blur-2xl bg-white/[0.10] border border-white/[0.15] rounded-3xl shadow-[0_24px_80px_rgba(0,0,0,0.6)] p-6 max-w-md w-full mx-4"
+        className="backdrop-blur-2xl bg-white/[0.17] border border-white/[0.22] rounded-3xl shadow-[0_24px_80px_rgba(0,0,0,0.6)] p-6 max-w-md w-full mx-4"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-6">
@@ -44,7 +44,7 @@ export default function CreateBoardModal({ onClose }: Props) {
               onChange={(e) => setName(e.target.value)}
               required
               placeholder="напр. Разработка Q3"
-              className="bg-white/[0.08] border border-white/[0.14] rounded-2xl px-4 py-2.5 text-sm text-white/90 placeholder:text-white/30 focus:outline-none focus:border-indigo-400/50 focus:bg-white/[0.11] transition-all"
+              className="bg-white/[0.14] border border-white/[0.20] rounded-2xl px-4 py-2.5 text-sm text-white/90 placeholder:text-white/30 focus:outline-none focus:border-indigo-400/50 focus:bg-white/[0.11] transition-all"
             />
           </div>
 
@@ -54,7 +54,7 @@ export default function CreateBoardModal({ onClose }: Props) {
               value={directionId}
               onChange={(e) => setDirectionId(e.target.value)}
               required
-              className="bg-white/[0.08] border border-white/[0.14] rounded-2xl px-4 py-2.5 text-sm text-white/90 focus:outline-none focus:border-indigo-400/50 transition-all"
+              className="bg-white/[0.14] border border-white/[0.20] rounded-2xl px-4 py-2.5 text-sm text-white/90 focus:outline-none focus:border-indigo-400/50 transition-all"
             >
               <option value="">Выберите направление…</option>
               {directions.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}

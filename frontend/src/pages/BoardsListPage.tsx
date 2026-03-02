@@ -118,7 +118,7 @@ export default function BoardsListPage() {
       {openMenuId && <div className="fixed inset-0 z-0" onClick={() => setOpenMenuId(null)} />}
 
       {/* Header */}
-      <header className="sticky top-0 z-20 backdrop-blur-2xl bg-white/[0.06] border-b border-white/[0.10] px-6 py-4 flex items-center justify-between gap-4">
+      <header className="sticky top-0 z-20 backdrop-blur-2xl bg-white/[0.11] border-b border-white/[0.23] px-6 py-4 flex items-center justify-between gap-4">
         <h1 className="text-lg font-semibold text-white/95 shrink-0">Доски</h1>
 
         {role === 'ADMIN' && (
@@ -128,12 +128,12 @@ export default function BoardsListPage() {
               placeholder="Поиск по названию…"
               value={nameFilter}
               onChange={(e) => setNameFilter(e.target.value)}
-              className="flex-1 text-sm bg-white/[0.07] border border-white/[0.12] rounded-xl px-3 py-1.5 text-white/85 placeholder:text-white/30 focus:outline-none focus:border-indigo-400/50 transition-all"
+              className="flex-1 text-sm bg-white/[0.19] border border-white/[0.18] rounded-xl px-3 py-1.5 text-white/85 placeholder:text-white/30 focus:outline-none focus:border-indigo-400/50 transition-all"
             />
             <select
               value={dirFilter}
               onChange={(e) => setDirFilter(e.target.value)}
-              className="text-sm bg-white/[0.07] border border-white/[0.12] rounded-xl px-3 py-1.5 text-white/85 focus:outline-none focus:border-indigo-400/50 transition-all"
+              className="text-sm bg-white/[0.19] border border-white/[0.18] rounded-xl px-3 py-1.5 text-white/85 focus:outline-none focus:border-indigo-400/50 transition-all"
             >
               <option value="">Все направления</option>
               {directions.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
@@ -192,7 +192,7 @@ export default function BoardsListPage() {
                   <div key={board.id} className="relative group">
                     <Link
                       to={`/boards/${board.id}`}
-                      className="block backdrop-blur-md bg-white/[0.06] border border-white/[0.10] rounded-2xl p-5 pr-10 hover:bg-white/[0.10] hover:border-white/[0.16] hover:shadow-[0_8px_32px_rgba(0,0,0,0.3)] transition-all duration-200"
+                      className="block backdrop-blur-md bg-white/[0.11] border border-white/[0.23] rounded-2xl p-5 pr-10 hover:bg-white/[0.17] hover:border-white/[0.23] hover:shadow-[0_8px_32px_rgba(0,0,0,0.3)] transition-all duration-200"
                     >
                       <h2 className="font-semibold text-white/90">{board.name}</h2>
                       {directionMap[board.directionId] && (
@@ -204,15 +204,15 @@ export default function BoardsListPage() {
                       <div className="absolute top-3 right-3 z-10">
                         <button
                           onClick={(e) => { e.preventDefault(); setOpenMenuId(openMenuId === board.id ? null : board.id) }}
-                          className="w-7 h-7 flex items-center justify-center rounded-lg text-white/30 hover:text-white/70 hover:bg-white/[0.10] transition-colors text-lg leading-none"
+                          className="w-7 h-7 flex items-center justify-center rounded-lg text-white/30 hover:text-white/70 hover:bg-white/[0.17] transition-colors text-lg leading-none"
                         >
                           ···
                         </button>
                         {openMenuId === board.id && (
-                          <div className="absolute right-0 mt-1 w-44 backdrop-blur-xl bg-white/[0.10] border border-white/[0.15] rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.4)] py-1 z-20">
+                          <div className="absolute right-0 mt-1 w-44 backdrop-blur-xl bg-white/[0.17] border border-white/[0.22] rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.4)] py-1 z-20">
                             <button
                               onClick={() => { setOpenMenuId(null); setConfirmAction({ type: 'archive', board }) }}
-                              className="w-full text-left px-3 py-2 text-sm text-white/70 hover:bg-white/[0.10] hover:text-white/95 transition-colors"
+                              className="w-full text-left px-3 py-2 text-sm text-white/70 hover:bg-white/[0.17] hover:text-white/95 transition-colors"
                             >
                               В архив
                             </button>

@@ -62,7 +62,7 @@ export default function ArchivedEpicsPage() {
 
   return (
     <div className="relative min-h-screen z-10">
-      <header className="sticky top-0 z-20 backdrop-blur-2xl bg-white/[0.06] border-b border-white/[0.10] px-6 py-4 flex items-center gap-4">
+      <header className="sticky top-0 z-20 backdrop-blur-2xl bg-white/[0.11] border-b border-white/[0.23] px-6 py-4 flex items-center gap-4">
         <Link to={`/boards/${boardId}`} className="text-sm text-indigo-300/80 hover:text-indigo-200 transition-colors">← Доска</Link>
         <h1 className="text-lg font-semibold text-white/95">
           Архив эпиков{board ? ` · ${board.name}` : ''}
@@ -135,7 +135,7 @@ function EpicCard({
 
   return (
     <>
-      <div className="backdrop-blur-md bg-white/[0.06] border border-white/[0.10] rounded-2xl p-5">
+      <div className="backdrop-blur-md bg-white/[0.11] border border-white/[0.23] rounded-2xl p-5">
         <div className="flex items-start justify-between gap-4 mb-3">
           <div>
             <h2 className="font-semibold text-white/90">{epic.title}</h2>
@@ -180,7 +180,7 @@ function EpicCard({
                     <li key={task.id} className={`text-sm rounded-xl px-2.5 py-1 ${
                       colId === '__deleted__'
                         ? 'bg-amber-400/[0.10] border border-amber-400/20 text-amber-200/80'
-                        : 'bg-white/[0.06] border border-white/[0.10] text-white/65'
+                        : 'bg-white/[0.11] border border-white/[0.23] text-white/65'
                     }`}>
                       {task.title}
                     </li>
