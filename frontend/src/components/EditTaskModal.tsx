@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { updateTask } from '../api/tasks'
 import { getAssignableUsers } from '../api/epics'
 import type { Epic, Task } from '../types'
+import GlassSelect from './GlassSelect'
 
 interface Props { task: Task; boardId: string; epics: Epic[]; onClose: () => void }
 
@@ -86,24 +87,30 @@ export default function EditTaskModal({ task, boardId, epics, onClose }: Props) 
 
           <div className="flex flex-col gap-1.5">
             <label className={labelCls}>Статус</label>
-            <select value={status} onChange={(e) => setStatus(e.target.value as Task['status'])} className={inputCls}>
-              {STATUSES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
-            </select>
+            <GlassSelect
+              value={status}
+              onChange={(v) => setStatus(v as Task['status'])}
+              options={STATUSES.map((s) => ({ value: s.value, label: s.label }))}
+            />
           </div>
 
           <div className="flex flex-col gap-1.5">
             <label className={labelCls}>Эпик</label>
-            <select value={epicId} onChange={(e) => setEpicId(e.target.value)} required className={inputCls}>
-              {epics.map((epic) => <option key={epic.id} value={epic.id}>{epic.title}</option>)}
-            </select>
+            <GlassSelect
+              value={epicId}
+              onChange={setEpicId}
+              options={epics.map((epic) => ({ value: epic.id, label: epic.title }))}
+            />
           </div>
 
           <div className="flex flex-col gap-1.5">
             <label className={labelCls}>Исполнитель <span className="text-white/30 font-normal">(необязательно)</span></label>
-            <select value={assigneeId} onChange={(e) => setAssigneeId(e.target.value)} className={inputCls}>
-              <option value="">— Не назначен —</option>
-              {users.map((user) => <option key={user.id} value={user.id}>{user.fullName}</option>)}
-            </select>
+            <GlassSelect
+              value={assigneeId}
+              onChange={setAssigneeId}
+              placeholder="— Не назначен —"
+              options={users.map((user) => ({ value: user.id, label: user.fullName }))}
+            />
           </div>
 
           <div className="flex flex-col gap-1.5">

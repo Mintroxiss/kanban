@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { getDirections } from '../api/directions'
 import { createBoard } from '../api/boards'
+import GlassSelect from './GlassSelect'
 
 interface Props { onClose: () => void }
 
@@ -50,15 +51,12 @@ export default function CreateBoardModal({ onClose }: Props) {
 
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-medium text-white/60">Направление</label>
-            <select
+            <GlassSelect
               value={directionId}
-              onChange={(e) => setDirectionId(e.target.value)}
-              required
-              className="bg-white/[0.14] border border-white/[0.20] rounded-2xl px-4 py-2.5 text-sm text-white/90 focus:outline-none focus:border-indigo-400/50 transition-all"
-            >
-              <option value="">Выберите направление…</option>
-              {directions.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
-            </select>
+              onChange={setDirectionId}
+              placeholder="Выберите направление…"
+              options={directions.map((d) => ({ value: d.id, label: d.name }))}
+            />
           </div>
 
           {mutation.isError && (

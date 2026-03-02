@@ -9,6 +9,7 @@ import {
   getTeamUsers, addUserToTeam, removeUserFromTeam, assignTeamLead, getAvailableUsers,
 } from '../api/teams'
 import type { Team, UserRole } from '../types'
+import GlassSelect from '../components/GlassSelect'
 
 const ROLE_LABELS: Record<UserRole, string> = {
   ADMIN: 'Администратор',
@@ -128,14 +129,13 @@ function TeamMembersPanel({ team, canManage }: { team: Team; canManage: boolean 
       )}
       {canManage && nonMembers.length > 0 && (
         <div className="flex items-center gap-2 mt-3 pt-3 border-t border-white/[0.06]">
-          <select
+          <GlassSelect
             value={addUserId}
-            onChange={(e) => setAddUserId(e.target.value)}
-            className="text-sm bg-white/[0.19] border border-white/[0.18] rounded-xl px-2.5 py-1.5 text-white/80 focus:outline-none focus:border-indigo-400/50 flex-1 transition-all"
-          >
-            <option value="">Добавить участника...</option>
-            {nonMembers.map((u) => <option key={u.id} value={u.id}>{u.fullName} ({ROLE_LABELS[u.role]})</option>)}
-          </select>
+            onChange={setAddUserId}
+            placeholder="Добавить участника..."
+            options={nonMembers.map((u) => ({ value: u.id, label: `${u.fullName} (${ROLE_LABELS[u.role]})` }))}
+            className="flex-1 text-sm"
+          />
           <button
             disabled={!addUserId || addMember.isPending}
             onClick={() => addUserId && addMember.mutate(addUserId)}
@@ -271,10 +271,12 @@ export default function TeamsPage() {
             <h2 className="font-semibold text-white/90 mb-4">Новая команда</h2>
             <div className="flex flex-col gap-3">
               <input type="text" placeholder="Название команды" value={createName} onChange={(e) => setCreateName(e.target.value)} className={inputCls} />
-              <select value={createDirectionId} onChange={(e) => setCreateDirectionId(e.target.value)} className={inputCls}>
-                <option value="">Выберите направление</option>
-                {directions.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
-              </select>
+              <GlassSelect
+                value={createDirectionId}
+                onChange={setCreateDirectionId}
+                placeholder="Выберите направление"
+                options={directions.map((d) => ({ value: d.id, label: d.name }))}
+              />
               <div className="flex gap-2">
                 <button
                   disabled={!createName.trim() || !createDirectionId || createMutation.isPending}
@@ -314,9 +316,11 @@ export default function TeamsPage() {
                     <div className="px-5 py-4 bg-indigo-500/[0.06]">
                       <div className="flex flex-col gap-3">
                         <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} className={inputCls} />
-                        <select value={editDirectionId} onChange={(e) => setEditDirectionId(e.target.value)} className={inputCls}>
-                          {directions.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
-                        </select>
+                        <GlassSelect
+                          value={editDirectionId}
+                          onChange={setEditDirectionId}
+                          options={directions.map((d) => ({ value: d.id, label: d.name }))}
+                        />
                         <div className="flex gap-2">
                           <button
                             disabled={!editName.trim() || !editDirectionId || updateMutation.isPending}

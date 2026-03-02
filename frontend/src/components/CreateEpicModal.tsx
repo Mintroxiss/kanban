@@ -3,10 +3,11 @@ import { createPortal } from 'react-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createEpic } from '../api/epics'
 import { getTeams } from '../api/teams'
+import GlassSelect from './GlassSelect'
 
 interface Props { boardId: string; onClose: () => void }
 
-const inputCls = 'bg-white/[0.14] border border-white/[0.20] rounded-2xl px-4 py-2.5 text-sm text-white/90 placeholder:text-white/30 focus:outline-none focus:border-violet-400/50 focus:bg-white/[0.11] transition-all'
+const inputCls = 'bg-white/[0.14] border border-white/[0.20] rounded-2xl px-4 py-2.5 text-sm text-white/90 placeholder:text-white/30 focus:outline-none focus:border-indigo-400/50 focus:bg-white/[0.11] transition-all'
 const labelCls = 'text-sm font-medium text-white/60'
 
 export default function CreateEpicModal({ boardId, onClose }: Props) {
@@ -54,10 +55,12 @@ export default function CreateEpicModal({ boardId, onClose }: Props) {
 
           <div className="flex flex-col gap-1.5">
             <label className={labelCls}>Команда <span className="text-white/30 font-normal">(необязательно)</span></label>
-            <select value={teamId} onChange={(e) => setTeamId(e.target.value)} className={inputCls}>
-              <option value="">— Назначить позже —</option>
-              {teams.map((team) => <option key={team.id} value={team.id}>{team.name}</option>)}
-            </select>
+            <GlassSelect
+              value={teamId}
+              onChange={setTeamId}
+              placeholder="— Назначить позже —"
+              options={teams.map((team) => ({ value: team.id, label: team.name }))}
+            />
           </div>
 
           {mutation.isError && (
@@ -71,7 +74,7 @@ export default function CreateEpicModal({ boardId, onClose }: Props) {
               Отмена
             </button>
             <button type="submit" disabled={mutation.isPending}
-              className="px-5 py-2 text-sm bg-violet-500/80 hover:bg-violet-500/95 text-white rounded-2xl font-medium disabled:opacity-50 transition-all border border-violet-400/30 shadow-[0_4px_16px_rgba(139,92,246,0.3)]">
+              className="px-5 py-2 text-sm bg-indigo-500/80 hover:bg-indigo-500/95 text-white rounded-2xl font-medium disabled:opacity-50 transition-all border border-indigo-400/30 shadow-[0_4px_16px_rgba(99,102,241,0.3)]">
               {mutation.isPending ? 'Создание…' : 'Создать'}
             </button>
           </div>

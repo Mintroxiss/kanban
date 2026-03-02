@@ -28,7 +28,7 @@ function GlobalBackground() {
       <div className="absolute -top-48 -left-48 w-[700px] h-[700px] rounded-full"
         style={{ background: 'radial-gradient(circle, rgba(79,70,229,0.18) 0%, transparent 65%)' }} />
       <div className="absolute top-1/2 -right-32 w-[500px] h-[500px] rounded-full"
-        style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.13) 0%, transparent 65%)' }} />
+        style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.13) 0%, transparent 65%)' }} />
       <div className="absolute -bottom-48 left-1/3 w-[600px] h-[600px] rounded-full"
         style={{ background: 'radial-gradient(circle, rgba(59,130,246,0.10) 0%, transparent 65%)' }} />
     </div>
@@ -93,12 +93,28 @@ function GlobalNotifications() {
   )
 }
 
+function ButtonSpotlight() {
+  useEffect(() => {
+    function track(e: MouseEvent) {
+      const btn = (e.target as Element).closest('button') as HTMLElement | null
+      if (!btn) return
+      const r = btn.getBoundingClientRect()
+      btn.style.setProperty('--gx', `${((e.clientX - r.left) / r.width * 100).toFixed(1)}%`)
+      btn.style.setProperty('--gy', `${((e.clientY - r.top) / r.height * 100).toFixed(1)}%`)
+    }
+    window.addEventListener('mousemove', track, { passive: true })
+    return () => window.removeEventListener('mousemove', track)
+  }, [])
+  return null
+}
+
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <WebSocketProvider>
         <BrowserRouter>
           <GlobalBackground />
+          <ButtonSpotlight />
           <OfflineBanner />
           <GlobalNotifications />
           <Routes>
