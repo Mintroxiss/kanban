@@ -21,16 +21,8 @@ interface Props {
 }
 
 export default function KanbanColumn({
-  column,
-  tasks,
-  boardId,
-  epics,
-  defaultEpicId,
-  canManage,
-  isAdmin,
-  role,
-  userId,
-  epicTeamNameMap,
+  column, tasks, boardId, epics, defaultEpicId,
+  canManage, isAdmin, role, userId, epicTeamNameMap,
 }: Props) {
   const queryClient = useQueryClient()
   const { setNodeRef, isOver } = useDroppable({ id: column.id })
@@ -52,9 +44,7 @@ export default function KanbanColumn({
 
   const deleteMutation = useMutation({
     mutationFn: () => deleteColumn(column.id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['columns', boardId] })
-    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['columns', boardId] }),
   })
 
   function commitRename() {
@@ -69,7 +59,7 @@ export default function KanbanColumn({
 
   return (
     <div className="flex flex-col w-72 shrink-0 group">
-      {/* Заголовок */}
+      {/* Header */}
       <div className="mb-3 flex items-center gap-2 min-h-[28px]">
         {editing ? (
           <input
@@ -81,14 +71,14 @@ export default function KanbanColumn({
               if (e.key === 'Escape') { setEditing(false); setEditTitle(column.title) }
             }}
             onBlur={commitRename}
-            className="flex-1 border border-blue-400 rounded px-2 py-0.5 text-sm font-semibold text-gray-700 uppercase tracking-wide focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="flex-1 bg-white/[0.08] border border-indigo-400/50 rounded-lg px-2 py-0.5 text-sm font-semibold text-white/90 uppercase tracking-wide focus:outline-none"
           />
         ) : (
           <>
-            <h3 className="font-semibold text-sm text-gray-700 uppercase tracking-wide flex-1 truncate">
+            <h3 className="font-semibold text-xs text-white/50 uppercase tracking-widest flex-1 truncate">
               {column.title}
             </h3>
-            <span className="text-xs text-gray-400 bg-gray-100 rounded-full px-2 py-0.5 shrink-0">
+            <span className="text-xs text-white/30 bg-white/[0.06] border border-white/[0.08] rounded-full px-2 py-0.5 shrink-0">
               {tasks.length}
             </span>
             {isAdmin && !confirmDelete && (
@@ -96,7 +86,7 @@ export default function KanbanColumn({
                 <button
                   onClick={() => { setEditTitle(column.title); setEditing(true) }}
                   title="Переименовать"
-                  className="text-gray-400 hover:text-gray-700 text-xs px-1"
+                  className="text-white/25 hover:text-white/70 text-xs px-1 transition-colors"
                 >
                   ✎
                 </button>
@@ -104,7 +94,7 @@ export default function KanbanColumn({
                   onClick={() => setConfirmDelete(true)}
                   disabled={tasks.length > 0}
                   title={tasks.length > 0 ? 'Сначала удалите все задачи из столбца' : 'Удалить'}
-                  className="text-gray-400 hover:text-red-500 text-xs px-1 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:text-gray-400"
+                  className="text-white/25 hover:text-red-300/80 text-xs px-1 disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
                 >
                   ✕
                 </button>
@@ -115,18 +105,18 @@ export default function KanbanColumn({
 
         {confirmDelete && (
           <div className="flex items-center gap-1 shrink-0">
-            <span className="text-xs text-gray-500">Удалить?</span>
+            <span className="text-xs text-white/40">Удалить?</span>
             <button
               disabled={deleteMutation.isPending}
               onClick={() => deleteMutation.mutate()}
-              className="text-xs bg-red-600 text-white px-2 py-0.5 rounded hover:bg-red-700 disabled:opacity-50 transition-colors"
+              className="text-xs bg-red-500/70 text-white px-2 py-0.5 rounded-lg hover:bg-red-500/90 disabled:opacity-50 transition-colors"
             >
               Да
             </button>
             <button
               disabled={deleteMutation.isPending}
               onClick={() => setConfirmDelete(false)}
-              className="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded hover:bg-gray-300 disabled:opacity-50 transition-colors"
+              className="text-xs bg-white/[0.08] text-white/60 px-2 py-0.5 rounded-lg hover:bg-white/[0.14] disabled:opacity-50 transition-colors"
             >
               Нет
             </button>
@@ -137,8 +127,10 @@ export default function KanbanColumn({
       <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
         <div
           ref={setNodeRef}
-          className={`flex flex-col gap-2 min-h-24 rounded-xl p-2 transition-colors ${
-            isOver ? 'bg-blue-50' : 'bg-gray-100'
+          className={`flex flex-col gap-2 min-h-24 rounded-2xl p-2 transition-all duration-200 ${
+            isOver
+              ? 'bg-indigo-500/[0.12] border-2 border-dashed border-indigo-400/40'
+              : 'bg-white/[0.04] border border-white/[0.07]'
           }`}
         >
           {tasks.map((task) => (
@@ -163,7 +155,7 @@ export default function KanbanColumn({
       {canManage && (
         <button
           onClick={() => setShowCreate(true)}
-          className="mt-2 text-sm text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg px-2 py-1.5 text-left transition-colors"
+          className="mt-2 text-sm text-white/30 hover:text-white/60 hover:bg-white/[0.06] rounded-xl px-2 py-1.5 text-left transition-colors"
         >
           + Добавить задачу
         </button>

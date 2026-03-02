@@ -16,16 +16,16 @@ function calcDaysLeft(deadline: string, todayStr: string): number {
   )
 }
 
-const STATUS_STYLES: Record<string, string> = {
-  TO_DO: 'bg-slate-100 text-slate-600',
-  IN_PROGRESS: 'bg-blue-100 text-blue-700',
-  DONE: 'bg-emerald-100 text-emerald-700',
+const STATUS_GLASS: Record<string, string> = {
+  TO_DO: 'bg-slate-400/[0.12] text-slate-200 border border-slate-400/20',
+  IN_PROGRESS: 'bg-blue-400/[0.15] text-blue-200 border border-blue-400/25',
+  DONE: 'bg-emerald-400/[0.15] text-emerald-200 border border-emerald-400/25',
 }
 
 const STATUS_ACCENT: Record<string, string> = {
-  TO_DO: 'border-l-slate-400',
-  IN_PROGRESS: 'border-l-blue-500',
-  DONE: 'border-l-emerald-500',
+  TO_DO: 'border-l-slate-400/60',
+  IN_PROGRESS: 'border-l-blue-400/80',
+  DONE: 'border-l-emerald-400/80',
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -54,9 +54,7 @@ export const TaskCardDisplay = forwardRef<HTMLDivElement, DisplayProps>(
     ref
   ) {
     const todayStr = useMidnightTick()
-
     const queryClient = useQueryClient()
-
     const [open, setOpen] = useState(false)
     const [editing, setEditing] = useState(false)
     const [confirmDelete, setConfirmDelete] = useState(false)
@@ -68,15 +66,12 @@ export const TaskCardDisplay = forwardRef<HTMLDivElement, DisplayProps>(
       mutationFn: () => deleteTask(task.id),
       onSuccess: () => setOpen(false),
     })
-
     const takeMutation = useMutation({
       mutationFn: () => takeTask(task.id),
       onSuccess: () => setConfirmTake(false),
     })
-
     const statusMutation = useMutation({
-      mutationFn: (newStatus: string) =>
-        changeStatus(task.id, newStatus, task.columnId!),
+      mutationFn: (newStatus: string) => changeStatus(task.id, newStatus, task.columnId!),
       onSuccess: (updated) => {
         if (boardId) {
           queryClient.setQueriesData<Record<string, Task[]>>(
@@ -94,7 +89,6 @@ export const TaskCardDisplay = forwardRef<HTMLDivElement, DisplayProps>(
         setOpen(false)
       },
     })
-
     const releaseMutation = useMutation({
       mutationFn: () => releaseTask(task.id),
       onSuccess: () => setMenuOpen(false),
@@ -105,14 +99,10 @@ export const TaskCardDisplay = forwardRef<HTMLDivElement, DisplayProps>(
       releaseMutation.reset()
       setConfirmTake(false)
       setMenuOpen(false)
-      // Намеренно не добавляем мутации в deps: нужно сбрасывать состояние только при смене исполнителя
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [task.assigneeId])
 
-    function closeModal() {
-      setOpen(false)
-      setConfirmDelete(false)
-    }
+    function closeModal() { setOpen(false); setConfirmDelete(false) }
 
     return (
       <>
@@ -120,39 +110,30 @@ export const TaskCardDisplay = forwardRef<HTMLDivElement, DisplayProps>(
           ref={ref}
           {...props}
           onClick={() => setOpen(true)}
-          className={`relative rounded-lg border border-l-4 p-3 shadow-sm hover:shadow-md transition-shadow select-none
-            ${STATUS_ACCENT[task.status] ?? 'border-l-gray-300'}
+          className={`relative rounded-xl border-l-4 border border-white/[0.08] p-3 shadow-sm hover:shadow-md transition-all select-none
+            ${STATUS_ACCENT[task.status] ?? 'border-l-white/20'}
             ${canDrag ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'}
-            ${isMyTask ? 'bg-blue-50 border-blue-200' : 'bg-white border-gray-200'}`}
+            ${isMyTask ? 'backdrop-blur-md bg-indigo-500/[0.28] border-indigo-400/50 shadow-[0_0_0_1px_rgba(99,102,241,0.25),0_4px_16px_rgba(99,102,241,0.20)]' : 'backdrop-blur-md bg-white/[0.06] hover:bg-white/[0.09]'}`}
         >
-          {/* Заголовок задачи и кнопка меню (отпустить) */}
           <div className="flex items-start gap-1 mb-2">
-            <p className="font-medium text-sm text-gray-800 flex-1 min-w-0">{task.title}</p>
-
+            <p className="font-medium text-sm text-white/88 flex-1 min-w-0">{task.title}</p>
             {canRelease && (
               <div className="relative shrink-0">
                 <button
                   onClick={(e) => { e.stopPropagation(); setMenuOpen((v) => !v) }}
                   onPointerDown={(e) => e.stopPropagation()}
-                  className="text-gray-400 hover:text-gray-700 text-sm leading-none px-1 rounded hover:bg-gray-100 transition-colors"
+                  className="text-white/25 hover:text-white/65 text-sm leading-none px-1 rounded-lg hover:bg-white/[0.08] transition-colors"
                 >
                   ···
                 </button>
-
                 {menuOpen && (
                   <>
-                    <div
-                      className="fixed inset-0 z-10"
-                      onClick={(e) => { e.stopPropagation(); setMenuOpen(false) }}
-                    />
-                    <div className="absolute right-0 top-6 z-20 bg-white border border-gray-200 rounded-lg shadow-lg py-1 min-w-[160px]">
+                    <div className="fixed inset-0 z-10" onClick={(e) => { e.stopPropagation(); setMenuOpen(false) }} />
+                    <div className="absolute right-0 top-6 z-20 backdrop-blur-xl bg-white/[0.10] border border-white/[0.15] rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.4)] py-1 min-w-[160px]">
                       <button
                         disabled={releaseMutation.isPending}
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          releaseMutation.mutate()
-                        }}
-                        className="w-full text-left text-xs px-3 py-1.5 text-gray-600 hover:bg-red-50 hover:text-red-600 transition-colors disabled:opacity-50"
+                        onClick={(e) => { e.stopPropagation(); releaseMutation.mutate() }}
+                        className="w-full text-left text-xs px-3 py-1.5 text-white/60 hover:bg-red-500/10 hover:text-red-300 transition-colors disabled:opacity-50"
                       >
                         {releaseMutation.isPending ? '…' : 'Отпустить задачу'}
                       </button>
@@ -164,59 +145,49 @@ export const TaskCardDisplay = forwardRef<HTMLDivElement, DisplayProps>(
           </div>
 
           <div className="flex items-center justify-between gap-2">
-            <span
-              className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_STYLES[task.status] ?? ''}`}
-            >
+            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_GLASS[task.status] ?? ''}`}>
               {STATUS_LABELS[task.status] ?? task.status}
             </span>
             {task.deadline && (
               showDeadlineCountdown ? (() => {
                 const d = calcDaysLeft(task.deadline, todayStr)
                 const cls =
-                  d <= 0 ? 'text-red-600 font-semibold' :
-                  d <= 2 ? 'text-orange-500 font-semibold' :
-                  d <= 5 ? 'text-amber-500' :
-                  'text-gray-400'
-                return (
-                  <span className={`text-xs ${cls}`}>
-                    {d <= 0 ? 'Просрочено' : `${d} дн.`}
-                  </span>
-                )
+                  d <= 0 ? 'text-red-300 font-semibold' :
+                  d <= 2 ? 'text-orange-300 font-semibold' :
+                  d <= 5 ? 'text-amber-300' :
+                  'text-white/30'
+                return <span className={`text-xs ${cls}`}>{d <= 0 ? 'Просрочено' : `${d} дн.`}</span>
               })() : (
-                <span className="text-xs text-gray-400">{task.deadline}</span>
+                <span className="text-xs text-white/30">{task.deadline}</span>
               )
             )}
           </div>
 
-          {task.assigneeName && (
-            <p className="mt-1.5 text-xs text-gray-500 truncate">{task.assigneeName}</p>
-          )}
-          {teamName && (
-            <p className="mt-0.5 text-xs text-gray-400 truncate">{teamName}</p>
-          )}
+          {task.assigneeName && <p className="mt-1.5 text-xs text-white/40 truncate">{task.assigneeName}</p>}
+          {teamName && <p className="mt-0.5 text-xs text-white/25 truncate">{teamName}</p>}
 
           {canTake && !confirmTake && (
             <button
               onClick={(e) => { e.stopPropagation(); setConfirmTake(true) }}
-              className="mt-2 w-full text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded py-0.5 text-left px-1 transition-colors"
+              className="mt-2 w-full text-xs text-indigo-300/80 hover:text-indigo-200 hover:bg-indigo-500/10 rounded-lg py-0.5 text-left px-1 transition-colors"
             >
               + Взять задачу
             </button>
           )}
           {canTake && confirmTake && (
             <div onClick={(e) => e.stopPropagation()} className="mt-2 flex items-center gap-1">
-              <span className="text-xs text-gray-600 flex-1">Взять задачу?</span>
+              <span className="text-xs text-white/50 flex-1">Взять задачу?</span>
               <button
                 disabled={takeMutation.isPending}
                 onClick={(e) => { e.stopPropagation(); takeMutation.mutate() }}
-                className="text-xs bg-blue-600 text-white px-2 py-0.5 rounded hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                className="text-xs bg-indigo-500/80 text-white px-2 py-0.5 rounded-lg hover:bg-indigo-500/95 disabled:opacity-50 transition-colors"
               >
                 {takeMutation.isPending ? '…' : 'Да'}
               </button>
               <button
                 disabled={takeMutation.isPending}
                 onClick={(e) => { e.stopPropagation(); setConfirmTake(false) }}
-                className="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded hover:bg-gray-300 disabled:opacity-50 transition-colors"
+                className="text-xs bg-white/[0.08] text-white/60 px-2 py-0.5 rounded-lg hover:bg-white/[0.14] disabled:opacity-50 transition-colors"
               >
                 Нет
               </button>
@@ -224,128 +195,104 @@ export const TaskCardDisplay = forwardRef<HTMLDivElement, DisplayProps>(
           )}
         </div>
 
-        {open &&
-          createPortal(
+        {open && createPortal(
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50" onClick={closeModal}>
             <div
-              className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
-              onClick={closeModal}
+              className="backdrop-blur-2xl bg-white/[0.10] border border-white/[0.15] rounded-3xl shadow-[0_24px_80px_rgba(0,0,0,0.6)] p-6 max-w-md w-full mx-4"
+              onClick={(e) => e.stopPropagation()}
             >
-              <div
-                className="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full mx-4"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <h2 className="text-lg font-semibold text-gray-800">{task.title}</h2>
-                  <button
-                    onClick={closeModal}
-                    className="text-gray-400 hover:text-gray-600 text-xl leading-none"
-                  >
-                    ×
-                  </button>
-                </div>
+              <div className="flex items-start justify-between mb-4">
+                <h2 className="text-lg font-semibold text-white/95">{task.title}</h2>
+                <button onClick={closeModal} className="text-white/35 hover:text-white/70 text-xl leading-none transition-colors">×</button>
+              </div>
 
-                {task.description && (
-                  <p className="text-sm text-gray-600 mb-4">{task.description}</p>
-                )}
+              {task.description && <p className="text-sm text-white/60 mb-4">{task.description}</p>}
 
-                <div className="flex flex-col gap-2 text-sm text-gray-500">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium text-gray-700">Статус:</span>
-                    {canChangeStatus ? (
-                      <select
-                        value={modalStatus}
-                        onChange={(e) => {
-                          const val = e.target.value as Task['status']
-                          setModalStatus(val)
-                          if (task.columnId) statusMutation.mutate(val)
-                        }}
-                        disabled={statusMutation.isPending}
-                        className="text-xs border border-gray-200 rounded px-2 py-0.5 bg-white focus:outline-none focus:ring-1 focus:ring-blue-400 disabled:opacity-50"
-                      >
-                        <option value="TO_DO">К выполнению</option>
-                        <option value="IN_PROGRESS">В работе</option>
-                        <option value="DONE">Готово</option>
-                      </select>
-                    ) : (
-                      <span
-                        className={`px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_STYLES[task.status] ?? ''}`}
-                      >
-                        {STATUS_LABELS[task.status] ?? task.status}
-                      </span>
-                    )}
-                  </div>
-                  {task.deadline && (
-                    <div className="flex gap-2">
-                      <span className="font-medium text-gray-700">Дедлайн:</span>
-                      <span>{task.deadline}</span>
-                    </div>
-                  )}
-                  {task.assigneeName && (
-                    <div className="flex gap-2">
-                      <span className="font-medium text-gray-700">Исполнитель:</span>
-                      <span>{task.assigneeName}</span>
-                    </div>
-                  )}
-                  {!task.assigneeId && task.lastAssigneeName && (
-                    <div className="flex gap-2">
-                      <span className="font-medium text-gray-700">Последний исполнитель:</span>
-                      <span className="text-gray-400">{task.lastAssigneeName}</span>
-                    </div>
-                  )}
-                </div>
-
-                {isAdmin && (
-                  <div className="mt-5 pt-4 border-t border-gray-100 flex items-center justify-between gap-4">
-                    <button
-                      onClick={() => { setOpen(false); setEditing(true) }}
-                      className="text-sm text-blue-600 hover:text-blue-800 transition-colors"
+              <div className="flex flex-col gap-2.5 text-sm text-white/55">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-white/75">Статус:</span>
+                  {canChangeStatus ? (
+                    <select
+                      value={modalStatus}
+                      onChange={(e) => {
+                        const val = e.target.value as Task['status']
+                        setModalStatus(val)
+                        if (task.columnId) statusMutation.mutate(val)
+                      }}
+                      disabled={statusMutation.isPending}
+                      className="text-xs bg-white/[0.08] border border-white/[0.14] rounded-lg px-2 py-0.5 text-white/80 focus:outline-none focus:border-indigo-400/50 disabled:opacity-50 transition-all"
                     >
-                      Редактировать
-                    </button>
-
-                    {!confirmDelete ? (
-                      <button
-                        onClick={() => setConfirmDelete(true)}
-                        className="text-sm text-red-500 hover:text-red-700 transition-colors"
-                      >
-                        Удалить
-                      </button>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm text-gray-600">Удалить?</span>
-                        <button
-                          disabled={deleteMutation.isPending}
-                          onClick={() => deleteMutation.mutate()}
-                          className="text-xs bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 disabled:opacity-50 transition-colors"
-                        >
-                          {deleteMutation.isPending ? '…' : 'Да'}
-                        </button>
-                        <button
-                          disabled={deleteMutation.isPending}
-                          onClick={() => setConfirmDelete(false)}
-                          className="text-xs bg-gray-200 text-gray-600 px-3 py-1 rounded hover:bg-gray-300 disabled:opacity-50 transition-colors"
-                        >
-                          Нет
-                        </button>
-                        {deleteMutation.isError && (
-                          <span className="text-xs text-red-500">Ошибка</span>
-                        )}
-                      </div>
-                    )}
+                      <option value="TO_DO">К выполнению</option>
+                      <option value="IN_PROGRESS">В работе</option>
+                      <option value="DONE">Готово</option>
+                    </select>
+                  ) : (
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_GLASS[task.status] ?? ''}`}>
+                      {STATUS_LABELS[task.status] ?? task.status}
+                    </span>
+                  )}
+                </div>
+                {task.deadline && (
+                  <div className="flex gap-2">
+                    <span className="font-medium text-white/75">Дедлайн:</span>
+                    <span>{task.deadline}</span>
+                  </div>
+                )}
+                {task.assigneeName && (
+                  <div className="flex gap-2">
+                    <span className="font-medium text-white/75">Исполнитель:</span>
+                    <span>{task.assigneeName}</span>
+                  </div>
+                )}
+                {!task.assigneeId && task.lastAssigneeName && (
+                  <div className="flex gap-2">
+                    <span className="font-medium text-white/75">Последний исполнитель:</span>
+                    <span className="text-white/35">{task.lastAssigneeName}</span>
                   </div>
                 )}
               </div>
-            </div>,
-            document.body
-          )}
+
+              {isAdmin && (
+                <div className="mt-5 pt-4 border-t border-white/[0.08] flex items-center justify-between gap-4">
+                  <button
+                    onClick={() => { setOpen(false); setEditing(true) }}
+                    className="text-sm text-indigo-300/80 hover:text-indigo-200 transition-colors"
+                  >
+                    Редактировать
+                  </button>
+                  {!confirmDelete ? (
+                    <button onClick={() => setConfirmDelete(true)} className="text-sm text-red-300/70 hover:text-red-300 transition-colors">
+                      Удалить
+                    </button>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-white/50">Удалить?</span>
+                      <button
+                        disabled={deleteMutation.isPending}
+                        onClick={() => deleteMutation.mutate()}
+                        className="text-xs bg-red-500/70 text-white px-3 py-1 rounded-xl hover:bg-red-500/90 disabled:opacity-50 transition-colors"
+                      >
+                        {deleteMutation.isPending ? '…' : 'Да'}
+                      </button>
+                      <button
+                        disabled={deleteMutation.isPending}
+                        onClick={() => setConfirmDelete(false)}
+                        className="text-xs bg-white/[0.08] text-white/60 px-3 py-1 rounded-xl hover:bg-white/[0.14] disabled:opacity-50 transition-colors"
+                      >
+                        Нет
+                      </button>
+                      {deleteMutation.isError && <span className="text-xs text-red-300/70">Ошибка</span>}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>,
+          document.body
+        )}
 
         {editing && boardId && (
-          <EditTaskModal
-            task={task}
-            boardId={boardId}
-            epics={epics}
-            onClose={() => setEditing(false)}
-          />
+          <EditTaskModal task={task} boardId={boardId} epics={epics} onClose={() => setEditing(false)} />
         )}
       </>
     )
@@ -353,29 +300,12 @@ export const TaskCardDisplay = forwardRef<HTMLDivElement, DisplayProps>(
 )
 
 export default function TaskCard({
-  task,
-  boardId,
-  epics,
-  isAdmin,
-  isMyTask,
-  canTake,
-  canRelease,
-  canChangeStatus,
-  canDrag = true,
-  teamName,
-  showDeadlineCountdown,
+  task, boardId, epics, isAdmin, isMyTask, canTake,
+  canRelease, canChangeStatus, canDrag = true, teamName, showDeadlineCountdown,
 }: {
-  task: Task
-  boardId?: string
-  epics?: Epic[]
-  isAdmin?: boolean
-  isMyTask?: boolean
-  canTake?: boolean
-  canRelease?: boolean
-  canChangeStatus?: boolean
-  canDrag?: boolean
-  teamName?: string
-  showDeadlineCountdown?: boolean
+  task: Task; boardId?: string; epics?: Epic[]; isAdmin?: boolean; isMyTask?: boolean
+  canTake?: boolean; canRelease?: boolean; canChangeStatus?: boolean; canDrag?: boolean
+  teamName?: string; showDeadlineCountdown?: boolean
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: task.id, disabled: !canDrag })
@@ -383,7 +313,7 @@ export default function TaskCard({
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.4 : 1,
+    opacity: isDragging ? 0.35 : 1,
   }
 
   return (

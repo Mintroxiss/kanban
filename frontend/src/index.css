@@ -1,1 +1,38 @@
 @import "tailwindcss";
+
+body {
+  background: #07091c;
+  min-height: 100vh;
+  color: white;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* Native select dark fix */
+select {
+  background-color: rgba(10, 14, 35, 0.95);
+  color: rgba(255, 255, 255, 0.9);
+}
+select option {
+  background-color: #0d1232;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Date input dark */
+input[type="date"] {
+  color-scheme: dark;
+}
