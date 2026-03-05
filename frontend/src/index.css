@@ -39,6 +39,207 @@ input[type="date"] {
   color-scheme: dark;
 }
 
+/* ============================
+   LIGHT THEME OVERRIDES
+   ============================ */
+
+html.light body {
+  background: #f1f5f9;
+  color: rgba(15, 23, 42, 0.9);
+}
+
+html.light ::-webkit-scrollbar-thumb {
+  background: rgba(15, 23, 42, 0.15);
+}
+html.light ::-webkit-scrollbar-thumb:hover {
+  background: rgba(15, 23, 42, 0.25);
+}
+
+html.light select {
+  background-color: rgba(248, 250, 252, 0.95);
+  color: rgba(15, 23, 42, 0.9);
+}
+html.light select option {
+  background-color: #f8fafc;
+  color: rgba(15, 23, 42, 0.9);
+}
+
+html.light input[type="date"] {
+  color-scheme: light;
+}
+
+/* --- Text colors --- */
+html.light .text-white { color: rgba(15, 23, 42, 0.95); }
+html.light .text-white\/95 { color: rgba(15, 23, 42, 0.95); }
+html.light .text-white\/90 { color: rgba(15, 23, 42, 0.90); }
+html.light .text-white\/88 { color: rgba(15, 23, 42, 0.88); }
+html.light .text-white\/85 { color: rgba(15, 23, 42, 0.85); }
+html.light .text-white\/80 { color: rgba(15, 23, 42, 0.80); }
+html.light .text-white\/75 { color: rgba(15, 23, 42, 0.75); }
+html.light .text-white\/70 { color: rgba(15, 23, 42, 0.70); }
+html.light .text-white\/65 { color: rgba(15, 23, 42, 0.65); }
+html.light .text-white\/60 { color: rgba(15, 23, 42, 0.60); }
+html.light .text-white\/55 { color: rgba(15, 23, 42, 0.55); }
+html.light .text-white\/50 { color: rgba(15, 23, 42, 0.50); }
+html.light .text-white\/45 { color: rgba(15, 23, 42, 0.45); }
+html.light .text-white\/40 { color: rgba(15, 23, 42, 0.40); }
+html.light .text-white\/35 { color: rgba(15, 23, 42, 0.35); }
+html.light .text-white\/30 { color: rgba(15, 23, 42, 0.30); }
+html.light .text-white\/25 { color: rgba(15, 23, 42, 0.25); }
+html.light .text-white\/20 { color: rgba(15, 23, 42, 0.20); }
+
+/* --- Hover text colors --- */
+html.light .hover\:text-white\/95:hover { color: rgba(15, 23, 42, 0.95); }
+html.light .hover\:text-white\/90:hover { color: rgba(15, 23, 42, 0.90); }
+html.light .hover\:text-white\/85:hover { color: rgba(15, 23, 42, 0.85); }
+html.light .hover\:text-white\/80:hover { color: rgba(15, 23, 42, 0.80); }
+html.light .hover\:text-white\/70:hover { color: rgba(15, 23, 42, 0.70); }
+html.light .hover\:text-white\/65:hover { color: rgba(15, 23, 42, 0.65); }
+html.light .hover\:text-white\/60:hover { color: rgba(15, 23, 42, 0.60); }
+
+/* --- Exception: keep white text on colored buttons --- */
+html.light [class*="bg-indigo-"].text-white,
+html.light [class*="bg-red-"].text-white,
+html.light [class*="bg-emerald-"].text-white,
+html.light [class*="bg-black"].text-white { color: white !important; }
+
+/* --- Placeholder text --- */
+html.light .placeholder\:text-white\/40::placeholder { color: rgba(15, 23, 42, 0.40); }
+html.light .placeholder\:text-white\/30::placeholder { color: rgba(15, 23, 42, 0.30); }
+
+/* --- Glass backgrounds --- */
+html.light .bg-white\/\[0\.03\] { background-color: rgba(255, 255, 255, 0.50); }
+html.light .bg-white\/\[0\.04\] { background-color: rgba(255, 255, 255, 0.70); }
+html.light .bg-white\/\[0\.05\] { background-color: rgba(255, 255, 255, 0.75); }
+html.light .bg-white\/\[0\.06\] { background-color: rgba(255, 255, 255, 0.50); }
+html.light .bg-white\/\[0\.11\] { background-color: rgba(255, 255, 255, 0.82); }
+html.light .bg-white\/\[0\.12\] { background-color: rgba(255, 255, 255, 0.70); }
+html.light .bg-white\/\[0\.14\] { background-color: rgba(255, 255, 255, 0.84); }
+html.light .bg-white\/\[0\.15\] { background-color: rgba(255, 255, 255, 0.86); }
+html.light .bg-white\/\[0\.17\] { background-color: rgba(255, 255, 255, 0.88); }
+html.light .bg-white\/\[0\.19\] { background-color: rgba(255, 255, 255, 0.85); }
+html.light .bg-white\/\[0\.24\] { background-color: rgba(255, 255, 255, 0.92); }
+
+/* --- Hover backgrounds --- */
+html.light .hover\:bg-white\/\[0\.03\]:hover { background-color: rgba(15, 23, 42, 0.03); }
+html.light .hover\:bg-white\/\[0\.04\]:hover { background-color: rgba(15, 23, 42, 0.04); }
+html.light .hover\:bg-white\/\[0\.11\]:hover { background-color: rgba(15, 23, 42, 0.07); }
+html.light .hover\:bg-white\/\[0\.12\]:hover { background-color: rgba(255, 255, 255, 0.78); }
+html.light .hover\:bg-white\/\[0\.14\]:hover { background-color: rgba(255, 255, 255, 0.90); }
+html.light .hover\:bg-white\/\[0\.15\]:hover { background-color: rgba(255, 255, 255, 0.92); }
+html.light .hover\:bg-white\/\[0\.17\]:hover { background-color: rgba(255, 255, 255, 0.93); }
+html.light .hover\:bg-white\/\[0\.19\]:hover { background-color: rgba(255, 255, 255, 0.90); }
+html.light .hover\:bg-white\/\[0\.22\]:hover { background-color: rgba(255, 255, 255, 0.95); }
+html.light .hover\:bg-white\/\[0\.28\]:hover { background-color: rgba(255, 255, 255, 0.97); }
+html.light .hover\:text-white:hover { color: rgba(15, 23, 42, 0.97); }
+
+/* --- Borders (не трогаем left, чтобы статусный цвет карточки жил) --- */
+html.light .border-white\/\[0\.09\] { border-color: rgba(15, 23, 42, 0.10); }
+html.light .border-white\/\[0\.07\] {
+  border-top-color: rgba(15, 23, 42, 0.10);
+  border-right-color: rgba(15, 23, 42, 0.10);
+  border-bottom-color: rgba(15, 23, 42, 0.10);
+}
+html.light .border-white\/\[0\.10\] {
+  border-top-color: rgba(15, 23, 42, 0.11);
+  border-right-color: rgba(15, 23, 42, 0.11);
+  border-bottom-color: rgba(15, 23, 42, 0.11);
+}
+html.light .border-white\/\[0\.13\] {
+  border-top-color: rgba(15, 23, 42, 0.12);
+  border-right-color: rgba(15, 23, 42, 0.12);
+  border-bottom-color: rgba(15, 23, 42, 0.12);
+}
+html.light .border-white\/\[0\.30\] { border-color: rgba(15, 23, 42, 0.25); }
+html.light .border-white\/\[0\.18\] { border-color: rgba(15, 23, 42, 0.13); }
+html.light .border-white\/\[0\.20\] { border-color: rgba(15, 23, 42, 0.14); }
+html.light .border-white\/\[0\.22\] { border-color: rgba(15, 23, 42, 0.15); }
+html.light .border-white\/\[0\.23\] { border-color: rgba(15, 23, 42, 0.16); }
+html.light .border-white\/\[0\.24\] { border-color: rgba(15, 23, 42, 0.17); }
+
+/* --- Статусный цвет левой границы карточки (восстанавливаем после border-white) --- */
+html.light .border-l-slate-400\/60   { border-left-color: rgb(71, 85, 105); }
+html.light .border-l-blue-400\/80    { border-left-color: rgb(37, 99, 235); }
+html.light .border-l-emerald-400\/80 { border-left-color: rgb(5, 150, 105); }
+html.light .border-l-white\/20       { border-left-color: rgba(15, 23, 42, 0.20); }
+
+/* --- Семантические цвета (лучше видны на светлом) --- */
+/* Red */
+html.light .text-red-300\/80  { color: rgba(185, 28, 28, 0.90); }
+html.light .text-red-300\/90  { color: rgba(185, 28, 28, 0.95); }
+html.light .text-red-300\/70  { color: rgba(185, 28, 28, 0.80); }
+html.light .text-red-300      { color: rgb(185, 28, 28); }
+html.light .border-red-400\/20 { border-color: rgba(185, 28, 28, 0.30); }
+html.light .hover\:text-red-300:hover  { color: rgb(153, 27, 27); }
+html.light .hover\:text-red-200:hover  { color: rgb(153, 27, 27); }
+html.light .hover\:bg-red-500\/10:hover { background-color: rgba(239, 68, 68, 0.10); }
+
+/* Amber (кнопки «Архивировать» + EpicReassignModal) */
+html.light .text-amber-300\/80  { color: rgba(146, 64, 14, 0.95); }
+html.light .text-amber-300\/70  { color: rgba(146, 64, 14, 0.90); }
+html.light .text-amber-300      { color: rgb(146, 64, 14); }
+html.light .bg-amber-400\/\[0\.06\]  { background-color: rgba(245, 158, 11, 0.10); }
+html.light .border-amber-400\/20 { border-color: rgba(180, 83, 9, 0.35); }
+html.light .border-amber-400\/40 { border-color: rgba(180, 83, 9, 0.60); }
+html.light .hover\:text-amber-200:hover   { color: rgb(120, 53, 15); }
+html.light .hover\:bg-amber-500\/10:hover { background-color: rgba(245, 158, 11, 0.12); }
+
+/* Emerald (EpicReassignModal статус «Все задачи распределены») */
+html.light .text-emerald-300\/80 { color: rgba(4, 120, 87, 0.95); }
+
+/* Indigo drop-zone (EpicReassignModal) */
+html.light .bg-indigo-400\/\[0\.10\]  { background-color: rgba(99, 102, 241, 0.10); }
+html.light .border-indigo-400\/40 { border-color: rgba(79, 70, 229, 0.55); }
+
+/* Indigo */
+html.light .text-indigo-300\/80  { color: rgba(67, 56, 202, 0.90); }
+html.light .text-indigo-300\/70  { color: rgba(67, 56, 202, 0.80); }
+html.light .text-indigo-300      { color: rgb(67, 56, 202); }
+html.light .text-indigo-400      { color: rgb(55, 48, 163); }
+html.light .text-indigo-200      { color: rgb(67, 56, 202); }
+html.light .hover\:text-indigo-300:hover { color: rgb(55, 48, 163); }
+html.light .hover\:text-indigo-200:hover { color: rgb(55, 48, 163); }
+html.light .hover\:bg-indigo-500\/20:hover { background-color: rgba(99, 102, 241, 0.15); }
+
+/* Blue (бейдж команды) */
+html.light .text-blue-200        { color: rgb(29, 78, 216); }
+html.light .border-blue-400\/20  { border-color: rgba(29, 78, 216, 0.30); }
+html.light .border-blue-400\/25  { border-color: rgba(29, 78, 216, 0.35); }
+
+/* Статусные бейджи — текст (слишком светлые на светлом фоне) */
+html.light .text-slate-200   { color: rgb(51, 65, 85); }
+html.light .text-blue-200    { color: rgb(29, 78, 216); }
+html.light .text-emerald-200 { color: rgb(4, 120, 87); }
+
+/* Статусные бейджи — границы */
+html.light .border-slate-400\/20   { border-color: rgba(71, 85, 105, 0.40); }
+html.light .border-blue-400\/25    { border-color: rgba(29, 78, 216, 0.35); }
+html.light .border-emerald-400\/25 { border-color: rgba(5, 150, 105, 0.35); }
+
+/* Дедлайн-каунтдаун */
+html.light .text-orange-300 { color: rgb(194, 65, 12); }
+html.light .text-amber-300  { color: rgb(146, 64, 14); }
+
+/* --- Разделители между строками (Directions / Users) --- */
+html.light .divide-white\/\[0\.06\] > :not([hidden]) ~ :not([hidden]) {
+  border-color: rgba(15, 23, 42, 0.09);
+}
+
+/* --- Тултип эпика: чёрный фон → белый в светлой теме --- */
+html.light .bg-black\/70 { background-color: rgba(248, 250, 252, 0.98) !important; }
+
+/* --- Amber (задачи удалённых колонок в ArchivedEpicsPage) --- */
+html.light .text-amber-200\/80  { color: rgba(120, 53, 15, 0.90); }
+html.light .bg-amber-400\/\[0\.10\] { background-color: rgba(245, 158, 11, 0.14); }
+
+/* --- Purple (бейдж Admin) --- */
+html.light .text-purple-200         { color: rgb(109, 40, 217); }
+html.light .border-purple-400\/20   { border-color: rgba(109, 40, 217, 0.30); }
+
+/* ============================
+   END LIGHT THEME OVERRIDES
+   ============================ */
+
 /* Cursor-tracking spotlight on buttons */
 button {
   position: relative;
