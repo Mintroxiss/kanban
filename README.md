@@ -37,7 +37,7 @@
 | Flyway | - |
 | MapStruct | 1.5.5 |
 | Lombok | - |
-| SpringDoc OpenAPI | 2.2.0 |
+| SpringDoc OpenAPI | 2.8.8 |
 
 ### Frontend
 | Технология | Версия |
@@ -87,7 +87,7 @@ Swagger UI: `http://localhost:8080/swagger-ui.html`
 
 ### Локально (без Docker)
 
-Требуется PostgreSQL на `localhost:5432`, база данных `kanban`.
+Требуется PostgreSQL на `localhost:5432`, база данных `tehartel`.
 
 ```bash
 ./gradlew bootRun
@@ -109,23 +109,25 @@ npm run dev
 
 Все эндпоинты находятся под префиксом `/api`. Полная документация доступна в Swagger UI после запуска приложения.
 
-| Ресурс | Эндпоинты |
+| Ресурс | Основные эндпоинты |
 |---|---|
-| Auth | `POST /api/auth/register`, `POST /api/auth/login` |
-| Boards | `GET/POST /api/boards`, `GET/PATCH/DELETE /api/boards/{id}` |
-| Columns | `GET/POST /api/columns/board/{boardId}`, `PATCH/DELETE /api/columns/{id}` |
-| Tasks | `GET/POST /api/tasks/column/{colId}`, `PATCH/DELETE /api/tasks/{id}`, `PATCH /api/tasks/{id}/move` |
-| Epics | `GET/POST /api/epics/board/{boardId}`, `PATCH/DELETE /api/epics/{id}`, `PATCH /api/epics/{id}/archive`, `PATCH /api/epics/{id}/restore`, `GET /api/epics/board/{boardId}/archived` |
-| Teams | `GET/POST /api/teams`, `PATCH/DELETE /api/teams/{id}` |
-| Directions | `GET/POST /api/directions`, `PATCH/DELETE /api/directions/{id}` |
-| Users | `GET /api/users`, `PATCH /api/users/{id}/role` |
+| Auth | `POST /api/auth/register`, `POST /api/auth/login`, `POST /api/auth/refresh` |
+| Boards | `GET/POST /api/boards`, `GET/PUT/DELETE /api/boards/{id}`, `GET /api/boards/archived`, `PATCH /api/boards/{id}/unarchive`, `DELETE /api/boards/{id}/permanent` |
+| Columns | `GET/POST /api/columns`, `GET/PUT/DELETE /api/columns/{id}` |
+| Tasks | `GET/POST /api/tasks`, `GET/PUT/DELETE /api/tasks/{id}`, `PATCH /api/tasks/{id}/move`, `PATCH /api/tasks/{id}/take`, `PATCH /api/tasks/{id}/assign`, `PATCH /api/tasks/{id}/status` |
+| Epics | `GET/POST /api/epics`, `GET/PUT/DELETE /api/epics/{id}`, `GET /api/epics/board/{boardId}`, `GET /api/epics/board/{boardId}/archived`, `PATCH /api/epics/{id}/archive`, `PATCH /api/epics/{id}/restore`, `PATCH /api/epics/{id}/assign-team` |
+| Teams | `GET/POST /api/teams`, `GET/PUT/DELETE /api/teams/{id}`, `GET/PUT/DELETE /api/teams/{id}/users/{userId}`, `PATCH /api/teams/{id}/lead` |
+| Directions | `GET/POST /api/directions`, `GET/PUT/DELETE /api/directions/{id}`, `GET /api/directions/{id}/boards`, `GET /api/directions/{id}/teams` |
+| Users | `GET/POST /api/users`, `GET/PUT/DELETE /api/users/{id}`, `PATCH /api/users/{id}/role`, `GET /api/users/{id}/tasks`, `GET /api/users/{id}/workload` |
 
 ---
 
 ## WebSocket
 
-Подписка на события доски: `/topic/board/{boardId}`
-
-Поддерживаемые типы событий: `TASK_CREATED`, `TASK_UPDATED`, `TASK_MOVED`, `TASK_DELETED`, `COLUMN_CREATED`, `COLUMN_UPDATED`, `COLUMN_DELETED`, `EPIC_CREATED`, `EPIC_UPDATED`, `EPIC_DELETED`, `EPIC_ARCHIVED`, `EPIC_RESTORED`.
+| Топик | Назначение |
+|---|---|
+| `/topic/board/{boardId}` | Изменения на конкретной доске (задачи, колонки, эпики) |
+| `/topic/boards` | Глобальные события досок |
+| `/topic/user/{userId}` | Персональные уведомления: смена роли, назначение в команду |
 
 ---
