@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import axios from 'axios'
 import { useAuthStore } from './store/authStore'
+import { useThemeStore } from './store/themeStore'
 import { useNotificationStore } from './store/notificationStore'
 import { useUserNotifications } from './hooks/useUserNotifications'
 import { useWebSocket } from './hooks/useWebSocket'
@@ -108,11 +109,22 @@ function ButtonSpotlight() {
   return null
 }
 
+function ThemeSync() {
+  const isDark = useThemeStore((s) => s.isDark)
+  useEffect(() => {
+    const root = document.documentElement
+    root.classList.toggle('dark', isDark)
+    root.classList.toggle('light', !isDark)
+  }, [isDark])
+  return null
+}
+
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <WebSocketProvider>
         <BrowserRouter>
+          <ThemeSync />
           <GlobalBackground />
           <ButtonSpotlight />
           <OfflineBanner />
